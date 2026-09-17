@@ -1,0 +1,25 @@
+{
+  "name": "swe-projectdisco-sar",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "format": "prettier --write \"./**/*.{js,jsx,ts,tsx,css,md,json}\" --config ./.prettierrc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Software-Engineering-Fall-26/SWE-ProjectDisco-SAR.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Software-Engineering-Fall-26/SWE-ProjectDisco-SAR/issues"
+  },
+  "homepage": "https://github.com/Software-Engineering-Fall-26/SWE-ProjectDisco-SAR#readme",
+  "devDependencies": {
+    "prettier": "^3.9.7"
+  }
+}
