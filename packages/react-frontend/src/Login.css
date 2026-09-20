@@ -1,0 +1,28 @@
+#title {
+  text-align: center;
+  color: rgb(87, 105, 234);
+  text-decoration-line: underline;
+  text-decoration-color: antiquewhite;
+  text-decoration-style: dotted;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 60px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+  margin: 50px auto;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.submit-button {
+  padding: 10px;
+  background-color: rgb(87, 105, 234);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: bold;
+}

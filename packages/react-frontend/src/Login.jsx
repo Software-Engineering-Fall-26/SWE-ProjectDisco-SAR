@@ -1,14 +1,9 @@
+import "./Login.css";
+
 // src/Table.jsx
-function TableHeader() {
+function LoginHeader() {
   return (
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Job</th>
-        <th>ID</th>
-        <th>Remove</th>
-      </tr>
-    </thead>
+    <h1 id="title">Login</h1>
   );
 }
 
@@ -30,10 +25,10 @@ function TableBody(props) {
   return <tbody>{rows}</tbody>;
 }
 
-function Table(props) {
+function Login(props) {
   return (
     <table>
-      <TableHeader />
+      <LoginHeader/>
       <TableBody
         characterData={props.characterData}
         removeCharacter={props.removeCharacter}
@@ -42,4 +37,4 @@ function Table(props) {
   );
 }
 
-export default Table;
+export default Login;

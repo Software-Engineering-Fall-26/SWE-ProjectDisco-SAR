@@ -1,6 +1,7 @@
-import Table from "./Table";
+import Login from "./Login";
 import Form from "./Form";
 import React, { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function MyApp() {
   const [characters, setCharacters] = useState([]);
@@ -65,10 +66,22 @@ function MyApp() {
   }
 
   return (
-    <div className="container">
-      <Table characterData={characters} removeCharacter={removeOneCharacter} />
-      <Form handleSubmit={updateList} />
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <div className="container">
+              <Login
+                characterData={characters}
+                removeCharacter={removeOneCharacter}
+              />
+              <Form handleSubmit={updateList} />
+            </div>
+          }
+        />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

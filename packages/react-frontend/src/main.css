@@ -834,7 +834,7 @@ dd {
 .button,
 a.button,
 button,
-[type="submit"],
+#[type="submit"],
 [type="reset"],
 [type="button"],
 [type="image"] {
