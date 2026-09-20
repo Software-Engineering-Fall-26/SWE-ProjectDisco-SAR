@@ -1,5 +1,7 @@
 import Login from "./Login";
-import Form from "./Form";
+import Form from "./LoginForm";
+import Landing from "./Landing";
+import Profile from "./Profile";
 import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
@@ -69,7 +71,12 @@ function MyApp() {
     <BrowserRouter>
       <Routes>
         <Route
-          path="/"
+          path="/" 
+          element={
+          <Landing />}
+        />
+        <Route
+          path="/login"
           element={
             <div className="container">
               <Login
@@ -80,6 +87,12 @@ function MyApp() {
             </div>
           }
         />
+        <Route
+          path="/profile"
+          element={
+            <Profile />
+          }
+          />
       </Routes>
     </BrowserRouter>
   );

@@ -1,0 +1,72 @@
+/* Login Page */
+
+.login-title {
+  text-align: center;
+  color: rgb(87, 105, 234);
+  text-decoration-line: underline;
+  text-decoration-color: antiquewhite;
+  text-decoration-style: dotted;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 60px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+  margin: 50px auto;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.submit-button {
+  padding: 10px;
+  background-color: rgb(87, 105, 234);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+/* Landing Page */
+
+.left-box {
+  width: 250px;
+  height: 100vh;
+  background-color: rgb(87, 105, 234);
+  position: fixed;
+  left: 0;
+  top: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  gap: 15px;
+  box-sizing: border-box;
+}
+
+.add-idea-button, .delete-idea-button, .edit-idea-button, .view-account-button{
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: bold;
+  background-color: rgb(87, 105, 234);
+  border-color:transparent;
+  border-radius: 5px;
+}
+
+.bottom-button{
+  margin-top: auto;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* Profile Page */
+
+.profile-title{
+  font-family:'Courier New', Courier, monospace;
+}

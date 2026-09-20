@@ -1,6 +1,12 @@
 // src/Form.jsx
 import React, { useState } from "react";
-import "./Login.css";
+import "./pages.css";
+
+function LoginHeader() {
+  return (
+    <h1 id="title" className = "login-title">Login</h1>
+  );
+}
 
 function Form(props) {
   const [person, setPerson] = useState({
@@ -20,6 +26,9 @@ function Form(props) {
   }
 
   return (
+    <>
+    <LoginHeader />
+
     <form className="login-form">
       <label htmlFor="name">Username</label>
       <input
@@ -30,19 +39,27 @@ function Form(props) {
         onChange={handleChange}
         className="login-input"
       />
+
       <label htmlFor="job">Password</label>
       <input
-        type="text"
+        type="password"
         name="job"
         id="job"
         value={person.job}
         onChange={handleChange}
         className="login-input"
       />
-      <input type="button" value="Submit" onClick={submitForm} className="submit-button"/>
-      
+
+      <input
+        type="button"
+        value="Submit"
+        onClick={submitForm}
+        className="submit-button"
+      />
     </form>
+  </>
   );
 }
+
 
 export default Form;
