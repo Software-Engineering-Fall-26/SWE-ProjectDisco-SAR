@@ -1,100 +1,44 @@
+import { Routes, Route, NavLink, Outlet } from "react-router-dom";
+
 import Login from "./Login";
-import Form from "./LoginForm";
-import Landing from "./Landing";
+import Ideas from "./Ideas";
 import Profile from "./Profile";
-import React, { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+function AppLayout() {
+  return (
+    <div className="app-layout">
+      <nav className="sidebar">
+        <NavLink to="/ideas" className="sidebar-link">
+          Ideas
+        </NavLink>
+
+        <NavLink to="/profile" className="sidebar-link account-link">
+          View Account
+        </NavLink>
+
+        <NavLink to="/login" className="sidebar-link">
+          Log Out
+        </NavLink>
+      </nav>
+
+      <main className="page-content">
+        <Outlet />
+      </main>
+    </div>
+  );
+}
 
 function MyApp() {
-  const [characters, setCharacters] = useState([]);
-
-  function updateList(person) {
-    postUser(person)
-      .then((response) => {
-        if (response.status !== 201) {
-          throw new Error(`User was not created. Status: ${response.status}`);
-        }
-
-        return response.json();
-      })
-      .then((newUser) => {
-        setCharacters([...characters, newUser]);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  }
-
-  function removeOneCharacter(id) {
-    const promise = fetch(`http://localhost:8000/users/${id}`, {
-      method: "DELETE",
-    });
-
-    promise.then((response) => {
-      if (response.status === 204) {
-        const updated = characters.filter((character) => {
-          return character.id !== id;
-        });
-
-        setCharacters(updated);
-      }
-    });
-  }
-
-  function fetchUsers() {
-    const promise = fetch("http://localhost:8000/users");
-    return promise;
-  }
-
-  useEffect(() => {
-    fetchUsers()
-      .then((res) => res.json())
-      .then((json) => setCharacters(json["users_list"]))
-      .catch((error) => {
-        console.log(error);
-      });
-  }, []);
-
-  function postUser(person) {
-    const promise = fetch("http://localhost:8000/users", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(person),
-    });
-
-    return promise;
-  }
-
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route
-          path="/" 
-          element={
-          <Landing />}
-        />
-        <Route
-          path="/login"
-          element={
-            <div className="container">
-              <Login
-                characterData={characters}
-                removeCharacter={removeOneCharacter}
-              />
-              <Form handleSubmit={updateList} />
-            </div>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <Profile />
-          }
-          />
-      </Routes>
-    </BrowserRouter>
+    <Routes>
+      <Route path="/" element={<Login />} />
+      <Route path="/login" element={<Login />} />
+
+      <Route element={<AppLayout />}>
+        <Route path="/ideas" element={<Ideas />} />
+        <Route path="/profile" element={<Profile />} />
+      </Route>
+    </Routes>
   );
 }
 

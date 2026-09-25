@@ -1,72 +1,276 @@
-/* Login Page */
+:root {
+  --primary-color: rgb(144, 23, 23);
+  --primary-hover: rgb(176, 29, 29);
+  --primary-active: rgb(196, 34, 34);
+
+  --page-background: #FAECC5;
+  --card-background: #901717;
+
+  --text-color: black;
+  --input-background: white;
+  --input-text: black;
+
+  --accent-color: antiquewhite;
+  --border-color: black;
+}
+
+.app-layout {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--page-background);
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+
+  width: 250px;
+  min-height: 100vh;
+  padding: 20px;
+
+  background-color: var(--primary-color);
+}
+
+.sidebar-link {
+  width: 100%;
+  padding: 10px;
+
+  color: var(--text-color);
+  font-family: "Courier New", Courier, monospace;
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  text-decoration: none;
+
+  border-radius: 5px;
+}
+
+.sidebar-link:hover {
+  background-color: var(--primary-hover);
+}
+
+.sidebar-link.active {
+  background-color: var(--primary-active);
+}
+
+.account-link {
+  margin-top: auto;
+}
+
+.page-content {
+  flex: 1;
+  padding: 40px;
+  color: var(--text-color);
+}
+
+.page-content h1 {
+  margin-top: 0;
+  font-family: "Courier New", Courier, monospace;
+}
+
+/* Login page */
+
+.login-page {
+  width: 100%;
+  min-height: 100vh;
+  padding-top: 30px;
+
+  background-color: var(--page-background);
+  color: var(--text-color);
+}
 
 .login-title {
   text-align: center;
-  color: rgb(87, 105, 234);
+  color: var(--primary-color);
+
   text-decoration-line: underline;
-  text-decoration-color: antiquewhite;
+  text-decoration-color: var(--accent-color);
   text-decoration-style: dotted;
-  font-family: 'Courier New', Courier, monospace;
+
+  font-family: "Courier New", Courier, monospace;
   font-size: 60px;
 }
 
 .login-form {
   display: flex;
   flex-direction: column;
+
   width: 300px;
   margin: 50px auto;
-  font-family: 'Courier New', Courier, monospace;
+
+  font-family: "Courier New", Courier, monospace;
+}
+
+.login-form label {
+  margin-bottom: 5px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.login-input {
+  margin-bottom: 20px;
+  padding: 10px;
+
+  border: 1px solid #cccccc;
+  border-radius: 5px;
+
+  background-color: var(--input-background);
+  color: var(--input-text);
+  font-size: 16px;
 }
 
 .submit-button {
   padding: 10px;
-  background-color: rgb(87, 105, 234);
-  color: white;
+
+  background-color: var(--primary-color);
+  color: var(--text-color);
+
   border: none;
   border-radius: 5px;
+
   cursor: pointer;
   font-size: 20px;
   font-weight: bold;
 }
 
-/* Landing Page */
+.submit-button:hover {
+  background-color: var(--primary-hover);
+}
 
-.left-box {
-  width: 250px;
-  height: 100vh;
-  background-color: rgb(87, 105, 234);
-  position: fixed;
-  left: 0;
-  top: 0;
+/* Ideas page */
 
+.ideas-page {
+  width: 100%;
+  max-width: 1100px;
+}
+
+.ideas-page h1 {
+  margin: 0 0 30px;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 42px;
+}
+
+/* Add/edit form */
+
+.idea-form {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(300px, 2fr) auto;
+  gap: 20px;
+  align-items: end;
+
+  margin-bottom: 35px;
+  padding: 25px;
+
+  background-color: var(--card-background);
+  border-radius: 8px;
+}
+
+.idea-form label {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 20px;
-  gap: 15px;
-  box-sizing: border-box;
-}
+  gap: 8px;
 
-.add-idea-button, .delete-idea-button, .edit-idea-button, .view-account-button{
-  width: 100%;
-  padding: 10px;
-  font-size: 16px;
-  font-family: 'Courier New', Courier, monospace;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 18px;
   font-weight: bold;
-  background-color: rgb(87, 105, 234);
-  border-color:transparent;
-  border-radius: 5px;
 }
 
-.bottom-button{
-  margin-top: auto;
+.idea-form input {
   width: 100%;
-  display: flex;
-  justify-content: center;
+  height: 44px;
+  padding: 8px 12px;
+
+  border: 1px solid #cccccc;
+  border-radius: 5px;
+
+  background-color: var(--input-background);
+  color: var(--input-text);
+  font-size: 16px;
 }
 
-/* Profile Page */
+.idea-form button {
+  min-height: 44px;
+  padding: 10px 18px;
 
-.profile-title{
-  font-family:'Courier New', Courier, monospace;
+  border: none;
+  border-radius: 5px;
+
+  background-color: var(--primary-color);
+  color: var(--text-color);
+
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.idea-form button:hover {
+  background-color: var(--primary-hover);
+}
+
+/* Ideas table */
+
+.ideas-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  background-color: var(--card-background);
+}
+
+.ideas-table th,
+.ideas-table td {
+  padding: 15px;
+  border: 1px solid var(--border-color);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.ideas-table th {
+  background-color: var(--primary-color);
+  color: var(--text-color);
+
+  font-family: "Courier New", Courier, monospace;
+  font-size: 18px;
+}
+
+.ideas-table th:nth-child(1) {
+  width: 25%;
+}
+
+.ideas-table th:nth-child(2) {
+  width: 50%;
+}
+
+.ideas-table th:nth-child(3) {
+  width: 25%;
+}
+
+.ideas-table td {
+  color: var(--text-color);
+  word-break: break-word;
+}
+
+.ideas-table button {
+  margin: 3px 8px 3px 0;
+  padding: 8px 12px;
+
+  border: none;
+  border-radius: 4px;
+
+  background-color: var(--primary-color);
+  color: var(--text-color);
+
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.ideas-table button:hover {
+  background-color: var(--primary-hover);
+}
+
+@media (max-width: 850px) {
+  .idea-form {
+    grid-template-columns: 1fr;
+  }
 }
