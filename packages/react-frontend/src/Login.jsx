@@ -1,33 +1,69 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./pages.css";
 
-
-
-// src/Table.jsx
-function TableBody(props) {
-  const rows = props.characterData.map((row, index) => {
-    return (
-      <tr key={row.id}>
-        <td>{row.name}</td>
-        <td>{row.job}</td>
-        <td>{row.id}</td>
-        <td>
-          <button onClick={() => props.removeCharacter(row.id)}>Delete</button>
-        </td>
-      </tr>
-    );
-  });
-
-  return <tbody>{rows}</tbody>;
+function LoginHeader() {
+  return <h1 className="login-title">Login</h1>;
 }
 
-function Login(props) {
+function Login() {
+  const [loginInfo, setLoginInfo] = useState({
+    username: "",
+    password: "",
+  });
+
+  const navigate = useNavigate();
+
+  function handleChange(event) {
+    const { name, value } = event.target;
+
+    setLoginInfo({
+      ...loginInfo,
+      [name]: value,
+    });
+  }
+
+  function handleSubmit(event) {
+    event.preventDefault();
+
+    // Actual account verification will be added later.
+    navigate("/ideas");
+  }
+
   return (
-    <table>
-      <TableBody
-        characterData={props.characterData}
-        removeCharacter={props.removeCharacter}
-      />
-    </table>
+    <div className="login-page">
+      <LoginHeader />
+
+      <form className="login-form" onSubmit={handleSubmit}>
+        <label htmlFor="username">Username</label>
+
+        <input
+          type="text"
+          name="username"
+          id="username"
+          value={loginInfo.username}
+          onChange={handleChange}
+          className="login-input"
+          required
+        />
+
+        <label htmlFor="password">Password</label>
+
+        <input
+          type="password"
+          name="password"
+          id="password"
+          value={loginInfo.password}
+          onChange={handleChange}
+          className="login-input"
+          required
+        />
+
+        <button type="submit" className="submit-button">
+          Submit
+        </button>
+      </form>
+    </div>
   );
 }
 
