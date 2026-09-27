@@ -21,5 +21,9 @@
   "homepage": "https://github.com/Software-Engineering-Fall-26/SWE-ProjectDisco-SAR#readme",
   "devDependencies": {
     "prettier": "^3.9.7"
+  },
+  "dependencies": {
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   }
 }

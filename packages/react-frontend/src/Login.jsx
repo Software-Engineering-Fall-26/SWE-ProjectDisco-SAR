@@ -1,67 +1,217 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
+
+import { describeSignupResult, formatAuthError } from "./authMessages";
+import { useAuth } from "./AuthContext";
 import "./pages.css";
 
-function LoginHeader() {
-  return <h1 className="login-title">Login</h1>;
-}
-
 function Login() {
-  const [loginInfo, setLoginInfo] = useState({
+  const { user, loading, isConfigured, signIn, signUp, requestPasswordReset } =
+    useAuth();
+  const navigate = useNavigate();
+
+  const [mode, setMode] = useState("login");
+  const [form, setForm] = useState({
     username: "",
+    email: "",
     password: "",
   });
+  const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const navigate = useNavigate();
+  if (loading) {
+    return (
+      <div className="login-page">
+        <p className="auth-status">Loading...</p>
+      </div>
+    );
+  }
+
+  if (user) {
+    return <Navigate to="/ideas" replace />;
+  }
+
+  function switchMode(nextMode) {
+    setMode(nextMode);
+    setError("");
+    setInfo("");
+  }
 
   function handleChange(event) {
     const { name, value } = event.target;
 
-    setLoginInfo({
-      ...loginInfo,
+    setForm({
+      ...form,
       [name]: value,
     });
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
+    setError("");
+    setInfo("");
+    setSubmitting(true);
 
-    // Actual account verification will be added later.
-    navigate("/ideas");
+    const email = form.email.trim();
+
+    try {
+      if (mode === "reset") {
+        await requestPasswordReset(email);
+        setInfo(
+          "If that email has an account, a password reset link was sent. Open it to choose a new password. Add http://localhost:5173/reset-password to Supabase redirect URLs if the link fails.",
+        );
+        return;
+      }
+
+      if (mode === "signup") {
+        const data = await signUp(email, form.password, form.username.trim());
+        const result = describeSignupResult(data);
+
+        if (result.alreadyExists) {
+          setError(result.message);
+          return;
+        }
+
+        if (result.needsConfirmation) {
+          setInfo(result.message);
+          return;
+        }
+
+        navigate("/ideas");
+        return;
+      }
+
+      await signIn(email, form.password);
+      navigate("/ideas");
+    } catch (authError) {
+      setError(formatAuthError(authError, mode));
+    } finally {
+      setSubmitting(false);
+    }
   }
+
+  const titles = {
+    login: "Login",
+    signup: "Create Account",
+    reset: "Reset Password",
+  };
+
+  const submitLabels = {
+    login: "Log In",
+    signup: "Create Account",
+    reset: "Send Reset Link",
+  };
 
   return (
     <div className="login-page">
-      <LoginHeader />
+      <h1 className="login-title">{titles[mode]}</h1>
+
+      {!isConfigured && (
+        <p className="error-message setup-message">
+          Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to
+          the repo-root .env file, then restart the Vite server.
+        </p>
+      )}
 
       <form className="login-form" onSubmit={handleSubmit}>
-        <label htmlFor="username">Username</label>
+        {mode === "signup" && (
+          <>
+            <label htmlFor="username">Username</label>
+            <input
+              type="text"
+              name="username"
+              id="username"
+              value={form.username}
+              onChange={handleChange}
+              className="login-input"
+              required
+            />
+          </>
+        )}
 
+        <label htmlFor="email">Email</label>
         <input
-          type="text"
-          name="username"
-          id="username"
-          value={loginInfo.username}
+          type="email"
+          name="email"
+          id="email"
+          value={form.email}
           onChange={handleChange}
           className="login-input"
+          autoComplete="email"
           required
         />
 
-        <label htmlFor="password">Password</label>
+        {mode !== "reset" && (
+          <>
+            <label htmlFor="password">Password</label>
+            <input
+              type="password"
+              name="password"
+              id="password"
+              value={form.password}
+              onChange={handleChange}
+              className="login-input"
+              autoComplete={mode === "signup" ? "new-password" : "current-password"}
+              minLength={6}
+              required
+            />
+          </>
+        )}
 
-        <input
-          type="password"
-          name="password"
-          id="password"
-          value={loginInfo.password}
-          onChange={handleChange}
-          className="login-input"
-          required
-        />
+        {mode === "reset" && (
+          <p className="info-message">
+            Enter the email for your account. If it exists, we will send a
+            reset link. No new account is created.
+          </p>
+        )}
 
-        <button type="submit" className="submit-button">
-          Submit
+        {error && <p className="error-message">{error}</p>}
+        {info && <p className="info-message">{info}</p>}
+
+        <button type="submit" className="submit-button" disabled={submitting}>
+          {submitting ? "Please wait..." : submitLabels[mode]}
         </button>
+
+        {mode === "login" && (
+          <button
+            type="button"
+            className="auth-switch-button"
+            onClick={() => switchMode("reset")}
+          >
+            Forgot password?
+          </button>
+        )}
+
+        {mode === "signup" && error.includes("already has an account") && (
+          <button
+            type="button"
+            className="auth-switch-button"
+            onClick={() => switchMode("reset")}
+          >
+            Reset password for this email
+          </button>
+        )}
+
+        <button
+          type="button"
+          className="auth-switch-button"
+          onClick={() => switchMode(mode === "signup" ? "login" : "signup")}
+        >
+          {mode === "signup"
+            ? "Already have an account? Log in"
+            : "Need an account? Create one"}
+        </button>
+
+        {mode === "reset" && (
+          <button
+            type="button"
+            className="auth-switch-button"
+            onClick={() => switchMode("login")}
+          >
+            Back to login
+          </button>
+        )}
       </form>
     </div>
   );

@@ -1,51 +1,68 @@
-//THIS FILE OCONTAINS ALL THE BACKEND COMMUNICATION STUFF
+import { supabase } from "../supabaseClient";
 
-
-const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:8000";
-
-async function sendRequest(path, options = {}) {
-  const response = await fetch(`${API_URL}${path}`, options);
-
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || "The request failed.");
+function requireSupabase() {
+  if (!supabase) {
+    throw new Error(
+      "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to the repo-root .env file.",
+    );
   }
+}
 
-  if (response.status === 204) {
-    return null;
+function throwIfError(error) {
+  if (error) {
+    throw new Error(error.message);
   }
-
-  return response.json();
 }
 
 export async function getIdeas() {
-  const data = await sendRequest("/ideas");
-  return data.ideas_list;
+  requireSupabase();
+
+  const { data, error } = await supabase
+    .from("ideas")
+    .select("id, title, description, created_at")
+    .order("created_at", { ascending: false });
+
+  throwIfError(error);
+  return data;
 }
 
-export function createIdea(idea) {
-  return sendRequest("/ideas", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(idea),
-  });
+export async function createIdea(idea) {
+  requireSupabase();
+
+  const { data, error } = await supabase
+    .from("ideas")
+    .insert({
+      title: idea.title,
+      description: idea.description,
+    })
+    .select()
+    .single();
+
+  throwIfError(error);
+  return data;
 }
 
-export function updateIdea(id, idea) {
-  return sendRequest(`/ideas/${id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(idea),
-  });
+export async function updateIdea(id, idea) {
+  requireSupabase();
+
+  const { data, error } = await supabase
+    .from("ideas")
+    .update({
+      title: idea.title,
+      description: idea.description,
+    })
+    .eq("id", id)
+    .select()
+    .single();
+
+  throwIfError(error);
+  return data;
 }
 
-export function deleteIdea(id) {
-  return sendRequest(`/ideas/${id}`, {
-    method: "DELETE",
-  });
+export async function deleteIdea(id) {
+  requireSupabase();
+
+  const { error } = await supabase.from("ideas").delete().eq("id", id);
+
+  throwIfError(error);
 }

@@ -139,6 +139,85 @@
   background-color: var(--primary-hover);
 }
 
+.submit-button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.auth-switch-button {
+  margin-top: 12px;
+  padding: 8px;
+
+  background: none;
+  border: none;
+
+  color: var(--primary-color);
+  font-family: "Courier New", Courier, monospace;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.auth-switch-button:hover {
+  text-decoration: underline;
+}
+
+.auth-status,
+.setup-message {
+  width: 300px;
+  margin: 0 auto 20px;
+  text-align: center;
+  font-family: "Courier New", Courier, monospace;
+}
+
+.auth-status a {
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+.error-message {
+  margin: 0 0 16px;
+  color: var(--primary-color);
+  font-family: "Courier New", Courier, monospace;
+  font-weight: bold;
+}
+
+.info-message {
+  margin: 0 0 16px;
+  color: var(--text-color);
+  font-family: "Courier New", Courier, monospace;
+}
+
+.logout-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.account-details {
+  display: grid;
+  gap: 16px;
+  max-width: 520px;
+  margin: 0;
+}
+
+.account-details div {
+  padding: 16px;
+  background-color: var(--card-background);
+  border-radius: 8px;
+}
+
+.account-details dt {
+  margin-bottom: 6px;
+  font-family: "Courier New", Courier, monospace;
+  font-weight: bold;
+}
+
+.account-details dd {
+  margin: 0;
+  word-break: break-word;
+}
+
 /* Ideas page */
 
 .ideas-page {
