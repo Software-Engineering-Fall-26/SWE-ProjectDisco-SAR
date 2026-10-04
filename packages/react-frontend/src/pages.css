@@ -560,3 +560,274 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Profile page */
+
+.profile-page {
+  width: 100%;
+  max-width: 800px;
+}
+
+.profile-page h1 {
+  margin: 0 0 24px;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 42px;
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  max-width: 650px;
+  margin-bottom: 28px;
+  padding: 24px;
+
+  background-color: var(--card-background);
+  border-radius: 8px;
+  color: var(--accent-color);
+}
+
+.profile-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  font-family: "Courier New", Courier, monospace;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.profile-form input,
+.profile-form textarea {
+  width: 100%;
+  padding: 10px 12px;
+
+  border: 1px solid #cccccc;
+  border-radius: 5px;
+
+  background-color: var(--input-background);
+  color: var(--input-text);
+
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 16px;
+  font-weight: normal;
+}
+
+.profile-form input {
+  height: 44px;
+}
+
+.profile-form textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.profile-form .submit-button {
+  align-self: flex-start;
+}
+
+.profile-page .account-details {
+  max-width: 650px;
+}
+
+.profile-visibility-fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.profile-visibility-fieldset legend {
+  width: 100%;
+  margin-bottom: 2px;
+
+  font-family: "Courier New", Courier, monospace;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.profile-form .profile-radio-label {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+
+  font-size: 16px;
+}
+
+.profile-form .profile-radio-label input {
+  width: auto;
+  height: auto;
+  margin: 0;
+}
+
+.profile-topics {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.profile-topics h2 {
+  margin: 0;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 24px;
+}
+
+.topic-options,
+.selected-topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.profile-form .topic-option,
+.profile-form .selected-topic {
+  width: auto;
+  min-height: 36px;
+  padding: 7px 12px;
+
+  border: 2px solid var(--accent-color);
+  border-radius: 999px;
+
+  background-color: transparent;
+  color: var(--accent-color);
+
+  font-family: "Courier New", Courier, monospace;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.profile-form .topic-option.selected,
+.profile-form .selected-topic {
+  background-color: var(--accent-color);
+  color: var(--text-color);
+}
+
+.logout-profile-button {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 5px;
+
+  background-color: var(--primary-color);
+  color: var(--text-color);
+
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.logout-profile-button:hover {
+  background-color: var(--primary-hover);
+}
+
+.logout-profile-button {
+  display: block;
+  margin-top: 28px;
+  padding: 12px 22px;
+
+  border: none;
+  border-radius: 5px;
+
+  background-color: var(--primary-color);
+  color: var(--text-color);
+
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.change-password-button {
+  display: block;
+  margin-top: 28px;
+  padding: 12px 22px;
+
+  border: none;
+  border-radius: 5px;
+
+  background-color: var(--primary-color);
+  color: var(--text-color);
+
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.change-password-button:hover {
+  background-color: var(--primary-hover);
+}
+.change-email-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  max-width: 650px;
+  margin-top: 28px;
+  padding: 24px;
+
+  background-color: var(--card-background);
+  border-radius: 8px;
+  color: var(--accent-color);
+}
+
+.change-email-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  font-family: "Courier New", Courier, monospace;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.change-email-form input {
+  width: 100%;
+  height: 44px;
+  padding: 10px 12px;
+
+  border: 1px solid #cccccc;
+  border-radius: 5px;
+
+  background-color: var(--input-background);
+  color: var(--input-text);
+
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 16px;
+}
+
+.change-email-button {
+  align-self: flex-start;
+  margin-top: 6px;
+  padding: 12px 22px;
+
+  border: none;
+  border-radius: 5px;
+
+  background-color: var(--primary-color);
+  color: var(--text-color);
+
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.change-email-button:hover {
+  background-color: var(--primary-hover);
+}
+
+.change-email-button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.change-email-form .error-message {
+  margin: 0;
+  color: var(--accent-color);
+}
+
+.change-email-form .info-message {
+  margin: 0;
+  color: var(--accent-color);
+}
