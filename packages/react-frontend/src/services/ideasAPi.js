@@ -1,5 +1,8 @@
 import { supabase } from "../supabaseClient";
 
+const IDEA_COLUMNS =
+  "id, user_id, title, description, looking_for, is_public, author_username, created_at";
+
 function requireSupabase() {
   if (!supabase) {
     throw new Error(
@@ -14,12 +17,47 @@ function throwIfError(error) {
   }
 }
 
+async function requireUser() {
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  throwIfError(error);
+
+  if (!user) {
+    throw new Error("You must be signed in.");
+  }
+
+  return user;
+}
+
 export async function getIdeas() {
   requireSupabase();
 
+  const user = await requireUser();
+
   const { data, error } = await supabase
     .from("ideas")
-    .select("id, title, description, created_at")
+    .select(IDEA_COLUMNS)
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  throwIfError(error);
+  return data;
+}
+
+export async function getPublicIdeas() {
+  requireSupabase();
+
+  await requireUser();
+
+  const { data, error } = await supabase
+    .from("ideas")
+    .select(
+      "id, user_id, title, description, looking_for, author_username, created_at",
+    )
+    .eq("is_public", true)
     .order("created_at", { ascending: false });
 
   throwIfError(error);
@@ -34,8 +72,10 @@ export async function createIdea(idea) {
     .insert({
       title: idea.title,
       description: idea.description,
+      looking_for: idea.lookingFor,
+      is_public: idea.isPublic,
     })
-    .select()
+    .select(IDEA_COLUMNS)
     .single();
 
   throwIfError(error);
@@ -50,9 +90,25 @@ export async function updateIdea(id, idea) {
     .update({
       title: idea.title,
       description: idea.description,
+      looking_for: idea.lookingFor,
+      is_public: idea.isPublic,
     })
     .eq("id", id)
-    .select()
+    .select(IDEA_COLUMNS)
+    .single();
+
+  throwIfError(error);
+  return data;
+}
+
+export async function setIdeaVisibility(id, isPublic) {
+  requireSupabase();
+
+  const { data, error } = await supabase
+    .from("ideas")
+    .update({ is_public: isPublic })
+    .eq("id", id)
+    .select(IDEA_COLUMNS)
     .single();
 
   throwIfError(error);

@@ -3,6 +3,7 @@ import { Routes, Route, NavLink, Outlet, Navigate, useNavigate } from "react-rou
 import { useAuth } from "./AuthContext";
 import Login from "./Login";
 import Ideas from "./Ideas";
+import IdeaBoard from "./IdeaBoard";
 import Profile from "./Profile";
 import ResetPassword from "./ResetPassword";
 
@@ -20,6 +21,10 @@ function AppLayout() {
       <nav className="sidebar">
         <NavLink to="/ideas" className="sidebar-link">
           Ideas
+        </NavLink>
+
+        <NavLink to="/board" className="sidebar-link">
+          Idea Board
         </NavLink>
 
         <NavLink to="/profile" className="sidebar-link account-link">
@@ -61,6 +66,7 @@ function MyApp() {
 
       <Route element={<ProtectedRoute />}>
         <Route path="/ideas" element={<Ideas />} />
+        <Route path="/board" element={<IdeaBoard />} />
         <Route path="/profile" element={<Profile />} />
       </Route>
     </Routes>

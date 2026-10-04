@@ -6,8 +6,7 @@ import { useAuth } from "./AuthContext";
 import "./pages.css";
 
 function Login() {
-  const { user, loading, isConfigured, signIn, signUp, requestPasswordReset } =
-    useAuth();
+  const { user, loading, signIn, signUp, requestPasswordReset } = useAuth();
   const navigate = useNavigate();
 
   const [mode, setMode] = useState("login");
@@ -106,13 +105,6 @@ function Login() {
   return (
     <div className="login-page">
       <h1 className="login-title">{titles[mode]}</h1>
-
-      {!isConfigured && (
-        <p className="error-message setup-message">
-          Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to
-          the repo-root .env file, then restart the Vite server.
-        </p>
-      )}
 
       <form className="login-form" onSubmit={handleSubmit}>
         {mode === "signup" && (

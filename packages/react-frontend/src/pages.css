@@ -162,8 +162,7 @@
   text-decoration: underline;
 }
 
-.auth-status,
-.setup-message {
+.auth-status {
   width: 300px;
   margin: 0 auto 20px;
   text-align: center;
@@ -225,17 +224,25 @@
   max-width: 1100px;
 }
 
-.ideas-page h1 {
-  margin: 0 0 30px;
+.ideas-page h1,
+.idea-board h1 {
+  margin: 0 0 12px;
   font-family: "Courier New", Courier, monospace;
   font-size: 42px;
+}
+
+.page-intro {
+  max-width: 680px;
+  margin: 0 0 28px;
+  font-family: "Courier New", Courier, monospace;
+  line-height: 1.5;
 }
 
 /* Add/edit form */
 
 .idea-form {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) minmax(300px, 2fr) auto;
+  grid-template-columns: minmax(220px, 1fr) minmax(220px, 1fr);
   gap: 20px;
   align-items: end;
 
@@ -244,6 +251,11 @@
 
   background-color: var(--card-background);
   border-radius: 8px;
+  color: var(--accent-color);
+}
+
+.idea-form .full-width {
+  grid-column: 1 / -1;
 }
 
 .idea-form label {
@@ -256,9 +268,9 @@
   font-weight: bold;
 }
 
-.idea-form input {
+.idea-form input,
+.idea-form textarea {
   width: 100%;
-  height: 44px;
   padding: 8px 12px;
 
   border: 1px solid #cccccc;
@@ -266,7 +278,69 @@
 
   background-color: var(--input-background);
   color: var(--input-text);
+  font-family: Arial, Helvetica, sans-serif;
   font-size: 16px;
+  font-weight: normal;
+}
+
+.idea-form input {
+  height: 44px;
+}
+
+.idea-form textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+
+.visibility-fieldset {
+  margin: 0;
+  padding: 0;
+  border: none;
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+}
+
+.visibility-fieldset legend {
+  margin-bottom: 8px;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.idea-form .radio-label {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
+
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.idea-form .radio-label input {
+  width: auto;
+  height: auto;
+  margin-top: 4px;
+}
+
+.field-hint {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: normal;
+}
+
+.idea-form .error-message {
+  margin: 0;
+  color: var(--accent-color);
+}
+
+.idea-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .idea-form button {
@@ -276,7 +350,7 @@
   border: none;
   border-radius: 5px;
 
-  background-color: var(--primary-color);
+  background-color: var(--accent-color);
   color: var(--text-color);
 
   font-size: 16px;
@@ -285,15 +359,19 @@
 }
 
 .idea-form button:hover {
-  background-color: var(--primary-hover);
+  background-color: white;
 }
 
 /* Ideas table */
 
+.ideas-table-wrap {
+  overflow-x: auto;
+}
+
 .ideas-table {
   width: 100%;
+  min-width: 760px;
   border-collapse: collapse;
-  table-layout: fixed;
   background-color: var(--card-background);
 }
 
@@ -313,18 +391,6 @@
   font-size: 18px;
 }
 
-.ideas-table th:nth-child(1) {
-  width: 25%;
-}
-
-.ideas-table th:nth-child(2) {
-  width: 50%;
-}
-
-.ideas-table th:nth-child(3) {
-  width: 25%;
-}
-
 .ideas-table td {
   color: var(--text-color);
   word-break: break-word;
@@ -337,7 +403,7 @@
   border: none;
   border-radius: 4px;
 
-  background-color: var(--primary-color);
+  background-color: var(--accent-color);
   color: var(--text-color);
 
   font-weight: bold;
@@ -345,7 +411,148 @@
 }
 
 .ideas-table button:hover {
-  background-color: var(--primary-hover);
+  background-color: white;
+}
+
+.visibility-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+
+  background-color: var(--page-background);
+  color: var(--text-color);
+
+  font-family: "Courier New", Courier, monospace;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.visibility-badge.public {
+  background-color: var(--accent-color);
+}
+
+/* Idea board */
+
+.idea-board {
+  width: 100%;
+  max-width: 900px;
+}
+
+.board-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.board-search-label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  font-family: "Courier New", Courier, monospace;
+  font-weight: bold;
+}
+
+.board-search {
+  width: 100%;
+  max-width: 520px;
+  height: 44px;
+  padding: 8px 12px;
+
+  border: 1px solid #cccccc;
+  border-radius: 5px;
+
+  background-color: var(--input-background);
+  color: var(--input-text);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 16px;
+  font-weight: normal;
+}
+
+.board-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.board-filter {
+  padding: 8px 14px;
+
+  border: 2px solid var(--primary-color);
+  border-radius: 999px;
+
+  background-color: transparent;
+  color: var(--text-color);
+
+  font-family: "Courier New", Courier, monospace;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.board-filter.active,
+.board-filter:hover {
+  background-color: var(--primary-color);
+  color: var(--accent-color);
+}
+
+.board-count {
+  margin: 0 0 12px;
+  font-family: "Courier New", Courier, monospace;
+  font-weight: bold;
+}
+
+.board-list {
+  display: grid;
+  gap: 16px;
+}
+
+.board-card {
+  padding: 20px;
+  background-color: var(--accent-color);
+  border: 2px solid var(--primary-color);
+  border-radius: 8px;
+}
+
+.board-card-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 12px;
+}
+
+.board-card h2 {
+  margin: 0;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 24px;
+}
+
+.board-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-bottom: 12px;
+
+  font-family: "Courier New", Courier, monospace;
+  font-size: 14px;
+}
+
+.looking-for-pill {
+  padding: 4px 10px;
+  border-radius: 999px;
+
+  background-color: var(--primary-color);
+  color: var(--accent-color);
+  font-weight: bold;
+}
+
+.board-description {
+  margin: 0;
+  line-height: 1.5;
+  white-space: pre-wrap;
 }
 
 @media (max-width: 850px) {
