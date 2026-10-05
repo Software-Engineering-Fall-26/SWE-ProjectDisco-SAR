@@ -6,6 +6,7 @@ import Ideas from "./Ideas";
 import IdeaBoard from "./IdeaBoard";
 import Profile from "./Profile";
 import ResetPassword from "./ResetPassword";
+import Messages from "./Messages";
 
 function AppLayout() {
   const { signOut } = useAuth();
@@ -25,6 +26,10 @@ function AppLayout() {
 
         <NavLink to="/board" className="sidebar-link">
           Idea Board
+        </NavLink>
+
+        <NavLink to="/messages" className="sidebar-link">
+          Messages
         </NavLink>
 
         <NavLink to="/profile" className="sidebar-link account-link">
@@ -67,6 +72,7 @@ function MyApp() {
       <Route element={<ProtectedRoute />}>
         <Route path="/ideas" element={<Ideas />} />
         <Route path="/board" element={<IdeaBoard />} />
+        <Route path="/messages" element={<Messages />} />
         <Route path="/profile" element={<Profile />} />
       </Route>
     </Routes>
