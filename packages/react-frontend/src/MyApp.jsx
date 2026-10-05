@@ -1,4 +1,4 @@
-import { Routes, Route, NavLink, Outlet, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, NavLink, Outlet, Navigate } from "react-router-dom";
 
 import { useAuth } from "./AuthContext";
 import Login from "./Login";
@@ -8,14 +8,6 @@ import Profile from "./Profile";
 import ResetPassword from "./ResetPassword";
 
 function AppLayout() {
-  const { signOut } = useAuth();
-  const navigate = useNavigate();
-
-  async function handleLogout() {
-    await signOut();
-    navigate("/login");
-  }
-
   return (
     <div className="app-layout">
       <nav className="sidebar">
@@ -30,10 +22,6 @@ function AppLayout() {
         <NavLink to="/profile" className="sidebar-link account-link">
           View Account
         </NavLink>
-
-        <button type="button" className="sidebar-link logout-button" onClick={handleLogout}>
-          Log Out
-        </button>
       </nav>
 
       <main className="page-content">
