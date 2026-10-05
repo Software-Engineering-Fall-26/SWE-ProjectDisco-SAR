@@ -109,6 +109,18 @@ export function AuthProvider({ children }) {
     }
   }
 
+  async function changeEmail(email) {
+    requireSupabase();
+
+    const { error } = await supabase.auth.updateUser({
+      email: email.trim(),
+    });
+
+    if (error) {
+      throw error;
+    }
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -120,6 +132,7 @@ export function AuthProvider({ children }) {
         signOut,
         requestPasswordReset,
         updatePassword,
+        changeEmail,
       }}
     >
       {children}
