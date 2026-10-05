@@ -72,3 +72,7 @@ git status
 ```
 
 Use a clear commit message that describes the change. Do not commit generated or private files, including `node_modules`, `dist`, and `.env` files._
+
+## Additional Downloads
+
+Download react-router-dom to be able to run the separate pages
