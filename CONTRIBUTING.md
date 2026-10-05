@@ -76,3 +76,6 @@ Use a clear commit message that describes the change. Do not commit generated or
 ## Additional Downloads
 
 Download react-router-dom to be able to run the separate pages
+
+SUPABASE:
+make sure you run npm install supabase@supabase.js
