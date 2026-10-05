@@ -831,3 +831,152 @@
   margin: 0;
   color: var(--accent-color);
 }
+
+/* Profile photo */
+
+.profile-avatar-section {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+}
+
+.avatar-preview {
+  display: grid;
+  width: 96px;
+  height: 96px;
+  overflow: hidden;
+  place-items: center;
+
+  border: 3px solid var(--accent-color);
+  border-radius: 50%;
+
+  background-color: var(--page-background);
+  color: var(--primary-color);
+
+  font-family: "Courier New", Courier, monospace;
+  font-size: 38px;
+  font-weight: bold;
+}
+
+.avatar-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-upload-label {
+  display: inline-flex !important;
+  width: fit-content;
+  min-height: 42px;
+  padding: 10px 16px;
+
+  justify-content: center;
+
+  border: none;
+  border-radius: 5px;
+
+  background-color: var(--accent-color);
+  color: var(--text-color) !important;
+
+  cursor: pointer;
+}
+
+.avatar-upload-label:hover {
+  background-color: white;
+}
+
+.avatar-upload-label input {
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden;
+  opacity: 0;
+}
+
+/* Profile preferences */
+
+.profile-preferences {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.profile-preferences h2 {
+  margin: 0;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 24px;
+}
+
+.preference-button {
+  width: fit-content;
+  padding: 10px 16px;
+
+  border: none;
+  border-radius: 5px;
+
+  background-color: var(--accent-color);
+  color: var(--text-color);
+
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.preference-button:hover {
+  background-color: white;
+}
+
+.message-permission-label {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 10px !important;
+  font-size: 16px !important;
+}
+
+.message-permission-label input {
+  width: auto !important;
+  height: auto !important;
+  margin: 0;
+}
+
+/* Account deletion placeholder */
+
+.delete-account-section {
+  max-width: 650px;
+  margin-top: 28px;
+  padding: 24px;
+
+  background-color: var(--card-background);
+  border: 2px solid #4b0505;
+  border-radius: 8px;
+  color: var(--accent-color);
+}
+
+.delete-account-section h2 {
+  margin: 0 0 12px;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 24px;
+}
+
+.delete-account-section p {
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+.delete-account-button {
+  padding: 12px 22px;
+
+  border: none;
+  border-radius: 5px;
+
+  background-color: #4b0505;
+  color: white;
+
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.delete-account-button:hover {
+  background-color: #700909;
+}

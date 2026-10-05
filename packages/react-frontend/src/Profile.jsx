@@ -13,53 +13,112 @@ const PRESET_TOPICS = [
   "Sustainability",
 ];
 
+const MAX_FILE_SIZE = 2 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+function getFileExtension(file) {
+  if (file.type === "image/png") {
+    return "png";
+  }
+
+  if (file.type === "image/webp") {
+    return "webp";
+  }
+
+  return "jpg";
+}
+
 function Profile() {
   const { user, signOut, changeEmail } = useAuth();
   const navigate = useNavigate();
 
   const [profile, setProfile] = useState(null);
+  const [avatarUrl, setAvatarUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
+  const [changingEmail, setChangingEmail] = useState(false);
   const [customTopic, setCustomTopic] = useState("");
   const [newEmail, setNewEmail] = useState("");
-  const [changingEmail, setChangingEmail] = useState(false);
+  const [nightModePreview, setNightModePreview] = useState(false);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
+    let isMounted = true;
+
     async function loadProfile() {
       if (!user || !supabase) {
         return;
       }
 
-      const { data, error: profileError } = await supabase
-        .from("profiles")
-        .select("display_name, description, is_public, topics")
-        .eq("id", user.id)
-        .single();
+      setLoading(true);
+      setError("");
 
-      if (profileError) {
-        setError(profileError.message);
-      } else {
-        setProfile({
+      try {
+        const { data, error: profileError } = await supabase
+          .from("profiles")
+          .select(
+            "display_name, description, is_public, topics, avatar_path, message_permission",
+          )
+          .eq("id", user.id)
+          .single();
+
+        if (profileError) {
+          throw profileError;
+        }
+
+        if (!isMounted) {
+          return;
+        }
+
+        const loadedProfile = {
           ...data,
           topics: data.topics ?? [],
-        });
-      }
+        };
 
-      setLoading(false);
+        setProfile(loadedProfile);
+
+        if (loadedProfile.avatar_path) {
+          const { data: signedUrlData, error: signedUrlError } =
+            await supabase.storage
+              .from("avatars")
+              .createSignedUrl(loadedProfile.avatar_path, 60 * 60);
+
+          if (signedUrlError) {
+            throw signedUrlError;
+          }
+
+          if (isMounted) {
+            setAvatarUrl(signedUrlData.signedUrl);
+          }
+        }
+      } catch (loadError) {
+        if (isMounted) {
+          setError(loadError.message);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
     }
 
     loadProfile();
+
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
-  function handleChange(event) {
-    const { name, value } = event.target;
-
+  function updateProfileField(field, value) {
     setProfile((currentProfile) => ({
       ...currentProfile,
-      [name]: value,
+      [field]: value,
     }));
+  }
+
+  function handleChange(event) {
+    updateProfileField(event.target.name, event.target.value);
   }
 
   function toggleTopic(topic) {
@@ -107,6 +166,126 @@ function Profile() {
 
     setCustomTopic("");
   }
+
+  async function handleAvatarChange(event) {
+    const file = event.target.files?.[0];
+
+    if (!file || !user || !supabase) {
+      return;
+    }
+
+    setError("");
+    setMessage("");
+
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      setError("Choose a JPG, PNG, or WebP image.");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      setError("Choose an image smaller than 2 MB.");
+      event.target.value = "";
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      const avatarPath = `${user.id}/avatar.${getFileExtension(file)}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(avatarPath, file, {
+          upsert: true,
+          contentType: file.type,
+          cacheControl: "3600",
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_path: avatarPath })
+        .eq("id", user.id);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      const { data: signedUrlData, error: signedUrlError } =
+        await supabase.storage
+          .from("avatars")
+          .createSignedUrl(avatarPath, 60 * 60);
+
+      if (signedUrlError) {
+        throw signedUrlError;
+      }
+
+      setProfile((currentProfile) => ({
+        ...currentProfile,
+        avatar_path: avatarPath,
+      }));
+      setAvatarUrl(signedUrlData.signedUrl);
+      setMessage("Profile photo updated.");
+    } catch (uploadError) {
+      setError(uploadError.message);
+    } finally {
+      setSaving(false);
+      event.target.value = "";
+    }
+  }
+
+  async function handleSave(event) {
+    event.preventDefault();
+
+    if (!profile || !user || !supabase) {
+      return;
+    }
+
+    const displayName = profile.display_name.trim();
+    const description = profile.description.trim();
+
+    if (!displayName) {
+      setError("Please enter a display name.");
+      return;
+    }
+
+    setSaving(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({
+          display_name: displayName,
+          description,
+          is_public: profile.is_public,
+          topics: profile.topics,
+          message_permission: profile.message_permission,
+        })
+        .eq("id", user.id);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      setProfile((currentProfile) => ({
+        ...currentProfile,
+        display_name: displayName,
+        description,
+      }));
+      setMessage("Profile saved.");
+    } catch (saveError) {
+      setError(saveError.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function handleEmailChange(event) {
     event.preventDefault();
 
@@ -150,43 +329,10 @@ function Profile() {
     }
   }
 
-  async function handleSave(event) {
-    event.preventDefault();
-
-    const displayName = profile.display_name.trim();
-    const description = profile.description.trim();
-
-    if (!displayName) {
-      setError("Please enter a display name.");
-      return;
-    }
-
-    setSaving(true);
-    setError("");
-    setMessage("");
-
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({
-        display_name: displayName,
-        description,
-        is_public: profile.is_public,
-        topics: profile.topics,
-      })
-      .eq("id", user.id);
-
-    if (updateError) {
-      setError(updateError.message);
-    } else {
-      setProfile((currentProfile) => ({
-        ...currentProfile,
-        display_name: displayName,
-        description,
-      }));
-      setMessage("Profile saved.");
-    }
-
-    setSaving(false);
+  function handleDeleteAccount() {
+    setError(
+      "Account deletion is not enabled yet. It must be implemented with a protected server-side function.",
+    );
   }
 
   if (loading) {
@@ -197,11 +343,13 @@ function Profile() {
     );
   }
 
-  if (error && !profile) {
+  if (!profile) {
     return (
       <div className="profile-page">
         <h1>Account</h1>
-        <p className="error-message">{error}</p>
+        <p className="error-message">
+          {error || "Your profile could not be loaded."}
+        </p>
       </div>
     );
   }
@@ -211,6 +359,30 @@ function Profile() {
       <h1>Account</h1>
 
       <form className="profile-form" onSubmit={handleSave}>
+        <section className="profile-avatar-section">
+          <div className="avatar-preview">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="Your profile" />
+            ) : (
+              <span>
+                {profile.display_name?.slice(0, 1).toUpperCase() || "?"}
+              </span>
+            )}
+          </div>
+
+          <label className="avatar-upload-label">
+            Change profile photo
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleAvatarChange}
+              disabled={saving}
+            />
+          </label>
+
+          <span className="field-hint">JPG, PNG, or WebP; maximum 2 MB.</span>
+        </section>
+
         <label>
           Display name
           <input
@@ -241,12 +413,7 @@ function Profile() {
               type="radio"
               name="is_public"
               checked={!profile.is_public}
-              onChange={() =>
-                setProfile((currentProfile) => ({
-                  ...currentProfile,
-                  is_public: false,
-                }))
-              }
+              onChange={() => updateProfileField("is_public", false)}
             />
             Private
           </label>
@@ -256,19 +423,13 @@ function Profile() {
               type="radio"
               name="is_public"
               checked={profile.is_public}
-              onChange={() =>
-                setProfile((currentProfile) => ({
-                  ...currentProfile,
-                  is_public: true,
-                }))
-              }
+              onChange={() => updateProfileField("is_public", true)}
             />
             Public
           </label>
 
           <span className="field-hint">
-            Public profiles will later show your display name and description to
-            other signed-in users.
+            Public profile viewing will be added later.
           </span>
         </fieldset>
 
@@ -327,6 +488,33 @@ function Profile() {
           )}
         </section>
 
+        <section className="profile-preferences">
+          <h2>Preferences</h2>
+
+          <button
+            type="button"
+            className="preference-button"
+            onClick={() => setNightModePreview((currentValue) => !currentValue)}
+          >
+            Night mode: {nightModePreview ? "On" : "Off"} (preview only)
+          </button>
+
+          <label className="message-permission-label">
+            <input
+              type="checkbox"
+              checked={profile.message_permission}
+              onChange={(event) =>
+                updateProfileField("message_permission", event.target.checked)
+              }
+            />
+            Allow messages when messaging becomes available
+          </label>
+
+          <span className="field-hint">
+            Messaging is not available yet. This preference is saved for later.
+          </span>
+        </section>
+
         {error && <p className="error-message">{error}</p>}
         {message && <p className="info-message">{message}</p>}
 
@@ -345,6 +533,7 @@ function Profile() {
           <dd>{profile.is_public ? "Public" : "Private"}</dd>
         </div>
       </dl>
+
       <form className="change-email-form" onSubmit={handleEmailChange}>
         <label>
           New email address
@@ -377,6 +566,7 @@ function Profile() {
       >
         Change password
       </button>
+
       <button
         type="button"
         className="logout-profile-button"
@@ -384,6 +574,18 @@ function Profile() {
       >
         Log out
       </button>
+
+      <section className="delete-account-section">
+        <h2>Danger zone</h2>
+        <p>Account deletion is permanent and cannot be undone.</p>
+        <button
+          type="button"
+          className="delete-account-button"
+          onClick={handleDeleteAccount}
+        >
+          Delete account
+        </button>
+      </section>
     </div>
   );
 }
