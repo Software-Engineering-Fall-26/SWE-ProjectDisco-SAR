@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { useAuth } from "./AuthContext";
+import { useAuth } from "./useAuth";
 import { getPublicIdeas } from "./services/ideasAPi";
 
 const BOARD_FILTERS = [
