@@ -78,4 +78,44 @@ Use a clear commit message that describes the change. Do not commit generated or
 Download react-router-dom to be able to run the separate pages
 
 SUPABASE:
-make sure you run npm install supabase@supabase.js
+Run npm install supabase@supabase.js
+
+Vercel and Public Domain Info:
+
+## Branches and deployment
+
+Our website is hosted on Vercel. The project is still in development;
+not every feature needs to be finished before the website is deployed.
+
+- `main` is our shared integration branch.
+- Vercel should use `main` as the production branch.
+- Production means the version served at our main website address,
+  not that the project is finished.
+- Feature branches keep individual changes separate until reviewed
+  and merged.
+- Pushing a feature branch creates a Vercel preview for online testing.
+- Merging into `main` triggers a production deployment. The live website
+  updates after the deployment succeeds.
+- Manual promotion is not part of our normal workflow.
+
+## Making changes
+
+1. Start from an up-to-date `main` and create a feature or fix branch.
+2. Make your changes on that branch.
+3. Test locally from `packages/react-frontend` using `npm run dev`.
+4. Run `npm run build` before submitting your changes.
+5. Commit and push your branch.
+6. Test the Vercel preview, including the pages affected by your changes.
+7. Open a pull request with `main` as the base branch.
+8. Describe what changed, how it was tested, and any unfinished behavior.
+9. Have a teammate review the changes before merging.
+10. After merging, check that the production deployment succeeds.
+
+## Deployment precautions
+
+- Do not commit `.env` files or secret credentials.
+- Never expose a Supabase service-role key in frontend code.
+- Match import paths to filenames exactly, including capitalization.
+- Clearly label or disable unfinished controls instead of implying
+  that they work.
+- A successful build does not replace testing the actual website.
