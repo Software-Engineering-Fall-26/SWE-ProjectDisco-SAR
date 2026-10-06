@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { formatAuthError } from "./authMessages";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "./useAuth";
 import "./pages.css";
 
 function ResetPassword() {
@@ -62,9 +62,7 @@ function ResetPassword() {
       <h1 className="login-title">New Password</h1>
 
       <form className="login-form" onSubmit={handleSubmit}>
-        <p className="info-message">
-          Choose a new password for {user.email}.
-        </p>
+        <p className="info-message">Choose a new password for {user.email}.</p>
 
         <label htmlFor="password">New password</label>
         <input
