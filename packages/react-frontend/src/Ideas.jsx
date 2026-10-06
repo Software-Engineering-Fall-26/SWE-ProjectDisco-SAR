@@ -9,7 +9,7 @@ import {
   updateIdea,
   setIdeaVisibility,
   deleteIdea,
-} from "./services/ideasApi";
+} from "./services/ideasAPi";
 
 function Ideas() {
   const [ideas, setIdeas] = useState([]);
@@ -145,8 +145,8 @@ function Ideas() {
     <div className="ideas-page">
       <h1>Ideas</h1>
       <p className="page-intro">
-        Ideas stay private unless you publish them. Public ideas show up on
-        the Idea Board for other signed-in users.
+        Ideas stay private unless you publish them. Public ideas show up on the
+        Idea Board for other signed-in users.
       </p>
 
       {error && <p className="error-message">{error}</p>}
