@@ -1,67 +1,120 @@
-import { useEffect, useMemo, useState } from "react";
-
+import { useEffect, useState } from "react";
 import { useAuth } from "./useAuth";
 
-
-async function fetchMessages(conversationId) {
-  const { data, error } = await supabase
-    .from('messages')
-    .select('*')
-    .eq('conversation_id', conversationId)
-    .order('created_at', { ascending: true });
-    
-  if (error) console.error('Error fetching messages:', error);
-  return data;
-}
-
-async function sendMessage(conversationId, senderId, content) {
-  const { error } = await supabase
-    .from('messages')
-    .insert([{ conversation_id: conversationId, sender_id: senderId, content }]);
-
-  if (error) console.error('Error sending message:', error);
-}
-
-function subscribeToMessages(conversationId, onMessageReceived) {
-  const channel = supabase
-    .channel(`public:messages:conversation_id=eq.${conversationId}`)
-    .on(
-      'postgres_changes',
-      {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'messages',
-        filter: `conversation_id=eq.${conversationId}`,
-      },
-      (payload) => {
-        // Run code to append the incoming message to your UI
-        onMessageReceived(payload.new);
-      }
-    )
-    .subscribe();
-
-  // Clean up subscription when leaving the chat room
-  return () => {
-    supabase.removeChannel(channel);
-  };
-}
+import {
+    fetchConversations,
+    fetchMessages
+} from "./services/messagesApi";
 
 function Messages() {
-    const [loading, setLoading] = useState(true); 
+    const { user } = useAuth();
 
-    return(
+    const [conversations, setConversations] = useState([]);
+    const [messages, setMessages] = useState([]);
+    const [selectedConversation, setSelectedConversation] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function loadConversations() {
+            try {
+                const data = await fetchConversations();
+                setConversations(data || []);
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        loadConversations();
+    }, []);
+
+    async function selectConversation(conversation) {
+        setSelectedConversation(conversation);
+
+        try {
+            const data = await fetchMessages(conversation.id);
+            setMessages(data || []);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    function getOtherUser(conversation) {
+        if (conversation.user1_id === user.id) {
+            return conversation.user2;
+        }
+
+        if (conversation.user2_id === user.id) {
+            return conversation.user1;
+        }
+
+        return conversation.user1;
+    }
+
+    return (
         <div className="messaged">
-            <h1> Messages </h1>
+            <h1>Messages</h1>
+
             <p className="page-intro">
                 Conversations with potential collaborators.
             </p>
 
             {loading ? (
-                <p>Loading messages...</p>
-            ) : conversations.length === 0 ? (
-                <p>No conversations yet. Accept someone's request or send someone your own to start chatting.</p>
+                <p>Loading conversations...</p>
             ) : (
-                <p> balls </p>
+                <div className="messages-layout">
+
+                    <div className="conversation-list">
+                        <h2>Conversations</h2>
+
+                        {conversations.length === 0 ? (
+                            <p>No conversations yet.</p>
+                        ) : (
+                            conversations.map((conversation) => {
+                                const otherUser = getOtherUser(conversation);
+
+                                return (
+                                    <button
+                                        key={conversation.id}
+                                        onClick={() => selectConversation(conversation)}
+                                    >
+                                        {otherUser?.display_name || "Unknown user"}
+                                    </button>
+                                );
+                            })
+                        )}
+                    </div>
+
+                    <div className="chat-area">
+
+                        {selectedConversation === null ? (
+                            <p>
+                                Select a conversation to view messages.
+                            </p>
+                        ) : (
+                            <>
+                                <h2>
+                                    {getOtherUser(
+                                        selectedConversation
+                                    )?.display_name}
+                                </h2>
+
+                                {messages.length === 0 ? (
+                                    <p>No messages yet.</p>
+                                ) : (
+                                    messages.map((message) => (
+                                        <div key={message.id}>
+                                            <p>{message.content}</p>
+                                        </div>
+                                    ))
+                                )}
+                            </>
+                        )}
+
+                    </div>
+
+                </div>
             )}
         </div>
     );
