@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import { createClient } from '@supabase/supabase-js';
+import { useAuth } from "./useAuth";
 
-const supabase = createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_ANON_KEY');
 
 async function fetchMessages(conversationId) {
   const { data, error } = await supabase
@@ -48,7 +47,24 @@ function subscribeToMessages(conversationId, onMessageReceived) {
 }
 
 function Messages() {
-    return;
+    const [loading, setLoading] = useState(true); 
+
+    return(
+        <div className="messaged">
+            <h1> Messages </h1>
+            <p className="page-intro">
+                Conversations with potential collaborators.
+            </p>
+
+            {loading ? (
+                <p>Loading messages...</p>
+            ) : conversations.length === 0 ? (
+                <p>No conversations yet. Accept someone's request or send someone your own to start chatting.</p>
+            ) : (
+                <p> balls </p>
+            )}
+        </div>
+    );
 }
 
 export default Messages;
