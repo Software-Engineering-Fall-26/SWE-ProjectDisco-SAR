@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 
 import { describeSignupResult, formatAuthError } from "./authMessages";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "./useAuth";
 import "./pages.css";
 
 function Login() {
@@ -144,7 +144,9 @@ function Login() {
               value={form.password}
               onChange={handleChange}
               className="login-input"
-              autoComplete={mode === "signup" ? "new-password" : "current-password"}
+              autoComplete={
+                mode === "signup" ? "new-password" : "current-password"
+              }
               minLength={6}
               required
             />
@@ -153,8 +155,8 @@ function Login() {
 
         {mode === "reset" && (
           <p className="info-message">
-            Enter the email for your account. If it exists, we will send a
-            reset link. No new account is created.
+            Enter the email for your account. If it exists, we will send a reset
+            link. No new account is created.
           </p>
         )}
 

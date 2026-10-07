@@ -1,6 +1,6 @@
 import { Routes, Route, NavLink, Outlet, Navigate } from "react-router-dom";
 
-import { useAuth } from "./AuthContext";
+import { useAuth } from "./useAuth";
 import Login from "./Login";
 import Ideas from "./Ideas";
 import IdeaBoard from "./IdeaBoard";
