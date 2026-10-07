@@ -3,7 +3,8 @@ import { useAuth } from "./useAuth";
 
 import {
     fetchConversations,
-    fetchMessages
+    fetchMessages,
+    sendMessage
 } from "./services/messagesApi";
 
 function Messages() {
@@ -13,6 +14,7 @@ function Messages() {
     const [messages, setMessages] = useState([]);
     const [selectedConversation, setSelectedConversation] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [newMessage, setNewMessage] = useState("");
 
     useEffect(() => {
         async function loadConversations() {
@@ -52,8 +54,31 @@ function Messages() {
         return conversation.user1;
     }
 
+    async function handleSendMessage() {
+    if (!newMessage.trim()) {
+        return;
+    }
+
+    if (!selectedConversation) {
+        return;
+    }
+
+    try {
+        const data = await sendMessage(
+            selectedConversation.id,
+            user.id,
+            newMessage
+        );
+
+        setMessages([...messages, data[0]]);
+        setNewMessage("");
+    } catch (error) {
+        console.error("Could not send message:", error);
+    }
+}
+
     return (
-        <div className="messaged">
+        <div className="messages">
             <h1>Messages</h1>
 
             <p className="page-intro">
@@ -75,7 +100,7 @@ function Messages() {
                                 const otherUser = getOtherUser(conversation);
 
                                 return (
-                                    <button
+                                    <button className="conversation-button" 
                                         key={conversation.id}
                                         onClick={() => selectConversation(conversation)}
                                     >
@@ -89,15 +114,11 @@ function Messages() {
                     <div className="chat-area">
 
                         {selectedConversation === null ? (
-                            <p>
-                                Select a conversation to view messages.
-                            </p>
+                            <p>Select a conversation to view messages.</p>
                         ) : (
                             <>
                                 <h2>
-                                    {getOtherUser(
-                                        selectedConversation
-                                    )?.display_name}
+                                    {getOtherUser(selectedConversation)?.display_name}
                                 </h2>
 
                                 {messages.length === 0 ? (
@@ -109,6 +130,21 @@ function Messages() {
                                         </div>
                                     ))
                                 )}
+
+                                <div className="message-input">
+                                    <input
+                                        type="text"
+                                        value={newMessage}
+                                        onChange={(event) =>
+                                            setNewMessage(event.target.value)
+                                        }
+                                        placeholder="Type a message..."
+                                    />
+
+                                    <button onClick={handleSendMessage}>
+                                        Send
+                                    </button>
+                                </div>
                             </>
                         )}
 
