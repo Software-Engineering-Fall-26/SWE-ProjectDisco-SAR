@@ -143,11 +143,14 @@ function Ideas() {
 
   return (
     <div className="ideas-page">
-      <h1>Ideas</h1>
-      <p className="page-intro">
-        Ideas stay private unless you publish them. Public ideas show up on the
-        Idea Board for other signed-in users.
-      </p>
+      <header className="page-header">
+        <p className="page-kicker">Workspace</p>
+        <h1>Ideas</h1>
+        <p className="page-intro">
+          Ideas stay private unless you publish them. Public ideas show up on
+          the Idea Board for other signed-in users.
+        </p>
+      </header>
 
       {error && <p className="error-message">{error}</p>}
 
@@ -158,16 +161,22 @@ function Ideas() {
         onCancel={cancelEdit}
       />
 
-      {loading ? (
-        <p>Loading ideas...</p>
-      ) : (
-        <IdeasTable
-          ideas={ideas}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onToggleVisibility={handleToggleVisibility}
-        />
-      )}
+      <section className="ideas-list">
+        <div className="section-heading">
+          <h2>Your ideas</h2>
+        </div>
+
+        {loading ? (
+          <p className="empty-state">Loading ideas...</p>
+        ) : (
+          <IdeasTable
+            ideas={ideas}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onToggleVisibility={handleToggleVisibility}
+          />
+        )}
+      </section>
     </div>
   );
 }

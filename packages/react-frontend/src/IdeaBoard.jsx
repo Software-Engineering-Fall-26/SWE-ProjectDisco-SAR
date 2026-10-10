@@ -93,12 +93,14 @@ function IdeaBoard() {
 
   return (
     <div className="idea-board">
-      <h1>Idea Board</h1>
-      <p className="page-intro">
-        Public ideas from people on the platform. See what they are building and
-        what they are looking for, whether that is investors, a co-founder, or
-        something else.
-      </p>
+      <header className="page-header">
+        <p className="page-kicker">Community</p>
+        <h1>Idea Board</h1>
+        <p className="page-intro">
+          Public ideas from people on Disco. See what they are building and who
+          they are looking for, from investors and co-founders to early users.
+        </p>
+      </header>
 
       {error && <p className="error-message">{error}</p>}
 
@@ -135,11 +137,13 @@ function IdeaBoard() {
       </div>
 
       {loading ? (
-        <p>Loading the board...</p>
+        <p className="empty-state">Loading the board...</p>
       ) : ideas.length === 0 ? (
-        <p>No public ideas yet. Publish one of yours from the Ideas page.</p>
+        <p className="empty-state">
+          No public ideas yet. Publish one of yours from the Ideas page.
+        </p>
       ) : visibleIdeas.length === 0 ? (
-        <p>No public ideas match that search.</p>
+        <p className="empty-state">No public ideas match that search.</p>
       ) : (
         <>
           <p className="board-count">
