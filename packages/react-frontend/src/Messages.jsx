@@ -7,7 +7,7 @@ import {
     fetchMessages,
     sendMessage,
     subscribeToMessages,
-} from "./services/messagesApi";
+} from "./services/messagesAPI";
 
 function Messages() {
     const { user } = useAuth();
