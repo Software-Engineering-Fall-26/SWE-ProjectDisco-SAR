@@ -1,22 +1,125 @@
 import { supabase } from "../supabaseClient";
 
-export async function sendMessage(conversationId, senderId, content) {
+export async function fetchConversations(userId) {
+    console.log("FETCH CONVERSATIONS FUNCTION CALLED!");
+    console.log("Received user ID:", userId);
+    if (!userId) return [];
+
+    // 1. Find conversations this user belongs to.
+    const { data: myMemberships, error: membershipError } =
+        await supabase
+            .from("conversation_members")
+            .select("conversation_id")
+            .eq("user_id", userId);
+
+    console.log("Memberships:", myMemberships);
+    console.log("Membership error:", membershipError);
+
+    if (membershipError) throw membershipError;
+
+    const conversationIds = [
+        ...new Set(myMemberships.map((row) => row.conversation_id)),
+    ];
+
+    if (conversationIds.length === 0) return [];
+
+    // 2. Fetch those conversations.
+    const { data: conversations, error: conversationError } =
+        await supabase
+            .from("conversations")
+            .select("*")
+            .in("id", conversationIds)
+            .order("created_at", { ascending: false });
+
+    if (conversationError) throw conversationError;
+
+    // 3. Fetch the participants in those conversations.
+    const { data: memberships, error: membersError } =
+        await supabase
+            .from("conversation_members")
+            .select("conversation_id, user_id, joined_at")
+            .in("conversation_id", conversationIds);
+
+        console.log("All visible members:", memberships);
+        console.log("Members error:", membersError);
+
+    if (membersError) throw membersError;
+
+    const userIds = [
+        ...new Set(memberships.map((member) => member.user_id)),
+    ];
+
+    // 4. Fetch the participants' profile information.
+    let profiles = [];
+
+    if (userIds.length > 0) {
+        const { data, error: profilesError } = await supabase
+            .from("profiles")
+            .select("id, display_name")
+            .in("id", userIds);
+
+        console.log("Requested profile IDs:", userIds);
+        console.log("Profiles returned:", data);
+        console.log("Profiles error:", profilesError);
+
+
+        if (profilesError) throw profilesError;
+        profiles = data;
+    }
+
+    // 5. Return conversations with their participants attached.
+    return conversations.map((conversation) => ({
+        ...conversation,
+        members: memberships
+            .filter(
+                (member) =>
+                    member.conversation_id === conversation.id
+            )
+            .map((member) => ({
+                ...member,
+                profile: profiles.find(
+                    (profile) => profile.id === member.user_id
+                ) ?? null,
+            })),
+    }));
+}
+
+export async function fetchMessages(conversationId) {
     const { data, error } = await supabase
         .from("messages")
-        .insert([
-            {
-                conversation_id: conversationId,
-                sender_id: senderId,
-                content: content,
-            },
-        ])
-        .select();
+        .select("*")
+        .eq("conversation_id", conversationId)
+        .order("created_at", { ascending: true });
 
+    if (error) throw error;
 
     return data;
 }
 
-export function subscribeToMessages(conversationId, onMessageReceived) {
+export async function sendMessage(
+    conversationId,
+    senderId,
+    content
+) {
+    const { data, error } = await supabase
+        .from("messages")
+        .insert({
+            conversation_id: conversationId,
+            sender_id: senderId,
+            content: content.trim(),
+        })
+        .select()
+        .single();
+
+    if (error) throw error;
+
+    return data;
+}
+
+export function subscribeToMessages(
+    conversationId,
+    onMessageReceived
+) {
     const channel = supabase
         .channel(`messages-${conversationId}`)
         .on(
@@ -27,69 +130,11 @@ export function subscribeToMessages(conversationId, onMessageReceived) {
                 table: "messages",
                 filter: `conversation_id=eq.${conversationId}`,
             },
-            (payload) => {
-                onMessageReceived(payload.new);
-            }
+            (payload) => onMessageReceived(payload.new)
         )
         .subscribe();
 
     return () => {
         supabase.removeChannel(channel);
     };
-}
-
-export async function fetchConversations() {
-    const { data: conversations, error: conversationError } = await supabase
-        .from("conversations")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-
-    const userIds = [
-        ...new Set(
-            conversations.flatMap((conversation) => [
-                conversation.user1_id,
-                conversation.user2_id
-            ])
-        )
-    ];
-
-
-    const { data: profiles, error: profileError } = await supabase
-        .from("profiles")
-        .select("id, display_name")
-        .in("id", userIds);
-
-
-    if (profileError) {
-        throw profileError;
-    }
-
-    return conversations.map((conversation) => {
-        const user1 = profiles.find(
-            (profile) => profile.id === conversation.user1_id
-        );
-
-        const user2 = profiles.find(
-            (profile) => profile.id === conversation.user2_id
-        );
-
-
-        return {
-            ...conversation,
-            user1,
-            user2
-        };
-    });
-}
-
-export async function fetchMessages(conversationId) {
-    const { data, error } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("conversation_id", conversationId)
-        .order("created_at", { ascending: true });
-
-
-    return data;
 }
