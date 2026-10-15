@@ -787,28 +787,6 @@
 }
 
 .delete-account-button:hover {
-<<<<<<< HEAD
-  background-color: #700909;
-}
-
-/* Messages */
-
-.messages{
-  font-family: "Courier New", Courier, monospace;
-}
-.conversation-button{
-  background-color: transparent;
-  font-family: "Courier New", Courier, monospace;
-  font-weight: bold;
-  border-color: #4b0505;
-  border: 2px solid var(--primary-color);
-  border-radius: 999px;
-
-}
-.conversation-button:hover{
-  background-color: #4b0505;
-}
-=======
   filter: brightness(1.08);
 }
 
@@ -1039,4 +1017,3 @@
     font-size: 30px;
   }
 }
->>>>>>> 37416b9632787ef5dc011799965b0b155af363eb
