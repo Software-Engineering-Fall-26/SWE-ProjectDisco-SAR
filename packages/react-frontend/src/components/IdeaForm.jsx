@@ -50,6 +50,15 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
 
   return (
     <form className="idea-form" onSubmit={handleSubmit}>
+      <div className="form-heading full-width">
+        <h2>{ideaToEdit ? "Edit idea" : "New idea"}</h2>
+        <p>
+          {ideaToEdit
+            ? "Update the details, then save."
+            : "Start private. Publish when you want other people to see it."}
+        </p>
+      </div>
+
       <label>
         Title
         <input
@@ -123,10 +132,12 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
       {formError && <p className="error-message full-width">{formError}</p>}
 
       <div className="idea-form-actions full-width">
-        <button type="submit">{ideaToEdit ? "Save Changes" : "Add Idea"}</button>
+        <button type="submit" className="btn-primary">
+          {ideaToEdit ? "Save changes" : "Add idea"}
+        </button>
 
         {ideaToEdit && (
-          <button type="button" onClick={onCancel}>
+          <button type="button" className="btn-ghost" onClick={onCancel}>
             Cancel
           </button>
         )}

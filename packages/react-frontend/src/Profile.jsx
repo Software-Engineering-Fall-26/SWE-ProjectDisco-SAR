@@ -44,6 +44,19 @@ function Profile() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
+    if (!nightModePreview) {
+      delete document.documentElement.dataset.theme;
+      return undefined;
+    }
+
+    document.documentElement.dataset.theme = "dark";
+
+    return () => {
+      delete document.documentElement.dataset.theme;
+    };
+  }, [nightModePreview]);
+
+  useEffect(() => {
     let isMounted = true;
 
     async function loadProfile() {
@@ -346,7 +359,10 @@ function Profile() {
   if (!profile) {
     return (
       <div className="profile-page">
-        <h1>Account</h1>
+        <header className="page-header">
+          <p className="page-kicker">You</p>
+          <h1>Account</h1>
+        </header>
         <p className="error-message">
           {error || "Your profile could not be loaded."}
         </p>
@@ -356,7 +372,13 @@ function Profile() {
 
   return (
     <div className="profile-page">
-      <h1>Account</h1>
+      <header className="page-header">
+        <p className="page-kicker">You</p>
+        <h1>Account</h1>
+        <p className="page-intro">
+          How you show up on Disco, and the settings for this login.
+        </p>
+      </header>
 
       <form className="profile-form" onSubmit={handleSave}>
         <section className="profile-avatar-section">
@@ -468,7 +490,7 @@ function Profile() {
             />
           </label>
 
-          <button type="button" onClick={addCustomTopic}>
+          <button type="button" className="btn-secondary" onClick={addCustomTopic}>
             Add topic
           </button>
 
@@ -559,21 +581,23 @@ function Profile() {
         {message && <p className="info-message">{message}</p>}
       </form>
 
-      <button
-        type="button"
-        className="change-password-button"
-        onClick={() => navigate("/reset-password")}
-      >
-        Change password
-      </button>
+      <div className="account-actions">
+        <button
+          type="button"
+          className="change-password-button"
+          onClick={() => navigate("/reset-password")}
+        >
+          Change password
+        </button>
 
-      <button
-        type="button"
-        className="logout-profile-button"
-        onClick={handleLogout}
-      >
-        Log out
-      </button>
+        <button
+          type="button"
+          className="logout-profile-button"
+          onClick={handleLogout}
+        >
+          Log out
+        </button>
+      </div>
 
       <section className="delete-account-section">
         <h2>Danger zone</h2>
