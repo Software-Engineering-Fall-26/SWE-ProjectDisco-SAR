@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { formatAuthError } from "./authMessages";
-import { useAuth } from "./AuthContext";
+import AuthFrame from "./components/AuthFrame";
+import { useAuth } from "./useAuth";
 import "./pages.css";
 
 function ResetPassword() {
@@ -37,34 +38,32 @@ function ResetPassword() {
 
   if (loading) {
     return (
-      <div className="login-page">
-        <p className="auth-status">Loading...</p>
+      <div className="boot-screen">
+        <span className="brand-mark" aria-hidden="true">
+          D
+        </span>
+        <p>Loading Disco</p>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="login-page">
-        <h1 className="login-title">Reset Password</h1>
-        <p className="auth-status">
+      <AuthFrame kicker="Account recovery" title="Reset password">
+        <p className="info-message">
           Open the reset link from your email to choose a new password.
         </p>
         <p className="auth-status">
           <Link to="/login">Back to login</Link>
         </p>
-      </div>
+      </AuthFrame>
     );
   }
 
   return (
-    <div className="login-page">
-      <h1 className="login-title">New Password</h1>
-
+    <AuthFrame kicker="Signed in" title="Choose a new password">
       <form className="login-form" onSubmit={handleSubmit}>
-        <p className="info-message">
-          Choose a new password for {user.email}.
-        </p>
+        <p className="info-message">Choose a new password for {user.email}.</p>
 
         <label htmlFor="password">New password</label>
         <input
@@ -95,10 +94,10 @@ function ResetPassword() {
         {error && <p className="error-message">{error}</p>}
 
         <button type="submit" className="submit-button" disabled={submitting}>
-          {submitting ? "Please wait..." : "Update Password"}
+          {submitting ? "Please wait..." : "Update password"}
         </button>
       </form>
-    </div>
+    </AuthFrame>
   );
 }
 

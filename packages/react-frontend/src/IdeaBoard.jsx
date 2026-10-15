@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { useAuth } from "./AuthContext";
-import { getPublicIdeas } from "./services/ideasApi";
+import { useAuth } from "./useAuth";
+import { getPublicIdeas } from "./services/ideasAPi";
 
 const BOARD_FILTERS = [
   { id: "all", label: "All" },
@@ -19,7 +19,8 @@ function matchesFilter(idea, filterId) {
     return true;
   }
 
-  const haystack = `${idea.looking_for} ${idea.title} ${idea.description}`.toLowerCase();
+  const haystack =
+    `${idea.looking_for} ${idea.title} ${idea.description}`.toLowerCase();
 
   if (filterId === "co-founder") {
     return (
@@ -92,12 +93,14 @@ function IdeaBoard() {
 
   return (
     <div className="idea-board">
-      <h1>Idea Board</h1>
-      <p className="page-intro">
-        Public ideas from people on the platform. See what they are building
-        and what they are looking for, whether that is investors, a co-founder,
-        or something else.
-      </p>
+      <header className="page-header">
+        <p className="page-kicker">Community</p>
+        <h1>Idea Board</h1>
+        <p className="page-intro">
+          Public ideas from people on Disco. See what they are building and who
+          they are looking for, from investors and co-founders to early users.
+        </p>
+      </header>
 
       {error && <p className="error-message">{error}</p>}
 
@@ -113,7 +116,11 @@ function IdeaBoard() {
           />
         </label>
 
-        <div className="board-filters" role="group" aria-label="Filter by what people are looking for">
+        <div
+          className="board-filters"
+          role="group"
+          aria-label="Filter by what people are looking for"
+        >
           {BOARD_FILTERS.map((filter) => (
             <button
               key={filter.id}
@@ -130,15 +137,18 @@ function IdeaBoard() {
       </div>
 
       {loading ? (
-        <p>Loading the board...</p>
+        <p className="empty-state">Loading the board...</p>
       ) : ideas.length === 0 ? (
-        <p>No public ideas yet. Publish one of yours from the Ideas page.</p>
+        <p className="empty-state">
+          No public ideas yet. Publish one of yours from the Ideas page.
+        </p>
       ) : visibleIdeas.length === 0 ? (
-        <p>No public ideas match that search.</p>
+        <p className="empty-state">No public ideas match that search.</p>
       ) : (
         <>
           <p className="board-count">
-            {visibleIdeas.length} public {visibleIdeas.length === 1 ? "idea" : "ideas"}
+            {visibleIdeas.length} public{" "}
+            {visibleIdeas.length === 1 ? "idea" : "ideas"}
           </p>
           <div className="board-list">
             {visibleIdeas.map((idea) => (

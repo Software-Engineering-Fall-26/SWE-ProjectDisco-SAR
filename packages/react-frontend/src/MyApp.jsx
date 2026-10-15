@@ -1,6 +1,6 @@
-import { Routes, Route, NavLink, Outlet, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, NavLink, Outlet, Navigate } from "react-router-dom";
 
-import { useAuth } from "./AuthContext";
+import { useAuth } from "./useAuth";
 import Login from "./Login";
 import Ideas from "./Ideas";
 import IdeaBoard from "./IdeaBoard";
@@ -9,36 +9,36 @@ import ResetPassword from "./ResetPassword";
 import Messages from "./Messages";
 
 function AppLayout() {
-  const { signOut } = useAuth();
-  const navigate = useNavigate();
-
-  async function handleLogout() {
-    await signOut();
-    navigate("/login");
-  }
-
   return (
     <div className="app-layout">
       <nav className="sidebar">
-        <NavLink to="/ideas" className="sidebar-link">
-          Ideas
-        </NavLink>
+        <div className="sidebar-brand">
+          <span className="brand-mark" aria-hidden="true">
+            D
+          </span>
+          <span className="brand-copy">
+            <span className="brand-name">Disco</span>
+            <span className="brand-tag">Idea studio</span>
+          </span>
+        </div>
 
-        <NavLink to="/board" className="sidebar-link">
-          Idea Board
-        </NavLink>
+        <div className="sidebar-nav">
+          <NavLink to="/ideas" className="sidebar-link">
+            Ideas
+          </NavLink>
+
+          <NavLink to="/board" className="sidebar-link">
+            Idea Board
+          </NavLink>
+        </div>
 
         <NavLink to="/messages" className="sidebar-link">
           Messages
         </NavLink>
 
         <NavLink to="/profile" className="sidebar-link account-link">
-          View Account
+          Account
         </NavLink>
-
-        <button type="button" className="sidebar-link logout-button" onClick={handleLogout}>
-          Log Out
-        </button>
       </nav>
 
       <main className="page-content">
@@ -52,7 +52,14 @@ function ProtectedRoute() {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <p className="page-content">Loading...</p>;
+    return (
+      <div className="boot-screen">
+        <span className="brand-mark" aria-hidden="true">
+          D
+        </span>
+        <p>Loading Disco</p>
+      </div>
+    );
   }
 
   if (!user) {
