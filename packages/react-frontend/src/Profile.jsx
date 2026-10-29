@@ -2,7 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "./useAuth";
-import { supabase } from "./supabaseClient";
+import {
+  fetchProfile,
+  saveProfile,
+  uploadAvatar,
+  validateAvatar,
+} from "./services/profileApi";
 
 const PRESET_TOPICS = [
   "Technology",
@@ -12,21 +17,6 @@ const PRESET_TOPICS = [
   "Health",
   "Sustainability",
 ];
-
-const MAX_FILE_SIZE = 2 * 1024 * 1024;
-const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
-
-function getFileExtension(file) {
-  if (file.type === "image/png") {
-    return "png";
-  }
-
-  if (file.type === "image/webp") {
-    return "webp";
-  }
-
-  return "jpg";
-}
 
 function Profile() {
   const { user, signOut, changeEmail } = useAuth();
@@ -60,7 +50,7 @@ function Profile() {
     let isMounted = true;
 
     async function loadProfile() {
-      if (!user || !supabase) {
+      if (!user) {
         return;
       }
 
@@ -68,42 +58,11 @@ function Profile() {
       setError("");
 
       try {
-        const { data, error: profileError } = await supabase
-          .from("profiles")
-          .select(
-            "display_name, description, is_public, topics, avatar_path, message_permission",
-          )
-          .eq("id", user.id)
-          .single();
+        const loadedProfile = await fetchProfile(user.id);
 
-        if (profileError) {
-          throw profileError;
-        }
-
-        if (!isMounted) {
-          return;
-        }
-
-        const loadedProfile = {
-          ...data,
-          topics: data.topics ?? [],
-        };
-
-        setProfile(loadedProfile);
-
-        if (loadedProfile.avatar_path) {
-          const { data: signedUrlData, error: signedUrlError } =
-            await supabase.storage
-              .from("avatars")
-              .createSignedUrl(loadedProfile.avatar_path, 60 * 60);
-
-          if (signedUrlError) {
-            throw signedUrlError;
-          }
-
-          if (isMounted) {
-            setAvatarUrl(signedUrlData.signedUrl);
-          }
+        if (isMounted) {
+          setProfile(loadedProfile.profile);
+          setAvatarUrl(loadedProfile.avatarUrl);
         }
       } catch (loadError) {
         if (isMounted) {
@@ -183,21 +142,17 @@ function Profile() {
   async function handleAvatarChange(event) {
     const file = event.target.files?.[0];
 
-    if (!file || !user || !supabase) {
+    if (!file || !user) {
       return;
     }
 
     setError("");
     setMessage("");
 
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      setError("Choose a JPG, PNG, or WebP image.");
-      event.target.value = "";
-      return;
-    }
+    const validationError = validateAvatar(file);
 
-    if (file.size > MAX_FILE_SIZE) {
-      setError("Choose an image smaller than 2 MB.");
+    if (validationError) {
+      setError(validationError);
       event.target.value = "";
       return;
     }
@@ -205,43 +160,13 @@ function Profile() {
     setSaving(true);
 
     try {
-      const avatarPath = `${user.id}/avatar.${getFileExtension(file)}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(avatarPath, file, {
-          upsert: true,
-          contentType: file.type,
-          cacheControl: "3600",
-        });
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ avatar_path: avatarPath })
-        .eq("id", user.id);
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      const { data: signedUrlData, error: signedUrlError } =
-        await supabase.storage
-          .from("avatars")
-          .createSignedUrl(avatarPath, 60 * 60);
-
-      if (signedUrlError) {
-        throw signedUrlError;
-      }
+      const uploadedAvatar = await uploadAvatar(user.id, file);
 
       setProfile((currentProfile) => ({
         ...currentProfile,
-        avatar_path: avatarPath,
+        avatar_path: uploadedAvatar.avatarPath,
       }));
-      setAvatarUrl(signedUrlData.signedUrl);
+      setAvatarUrl(uploadedAvatar.avatarUrl);
       setMessage("Profile photo updated.");
     } catch (uploadError) {
       setError(uploadError.message);
@@ -254,12 +179,11 @@ function Profile() {
   async function handleSave(event) {
     event.preventDefault();
 
-    if (!profile || !user || !supabase) {
+    if (!profile || !user) {
       return;
     }
 
     const displayName = profile.display_name.trim();
-    const description = profile.description.trim();
 
     if (!displayName) {
       setError("Please enter a display name.");
@@ -271,26 +195,8 @@ function Profile() {
     setMessage("");
 
     try {
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({
-          display_name: displayName,
-          description,
-          is_public: profile.is_public,
-          topics: profile.topics,
-          message_permission: profile.message_permission,
-        })
-        .eq("id", user.id);
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      setProfile((currentProfile) => ({
-        ...currentProfile,
-        display_name: displayName,
-        description,
-      }));
+      const savedProfile = await saveProfile(user.id, profile);
+      setProfile(savedProfile);
       setMessage("Profile saved.");
     } catch (saveError) {
       setError(saveError.message);
