@@ -7,6 +7,9 @@ import {
     fetchMessages,
     sendMessage,
     subscribeToMessages,
+    fetchUnreadCounts,
+    markConversationRead,
+    subscribeToUnreadMessages,
 } from "./services/messagesAPI";
 
 function Messages() {
@@ -21,6 +24,7 @@ function Messages() {
     const [newMessage, setNewMessage] = useState("");
     const [search, setSearch] = useState("");
     const [error, setError] = useState("");
+    const [unreadCounts, setUnreadCounts] = useState({});
 
     const bottomRef = useRef(null);
     const requestRef = useRef(0);
@@ -205,6 +209,88 @@ function Messages() {
                 .includes(search.toLowerCase())
     );
 
+    useEffect(() => {
+        if (!user?.id) {
+            setUnreadCounts({});
+            return;
+        }
+
+        let active = true;
+
+        async function loadUnread() {
+            try {
+                const counts = await fetchUnreadCounts(user.id);
+
+                if (active) {
+                    setUnreadCounts(counts);
+                }
+            } catch (err) {
+                console.error("Unread messages error:", err);
+            }
+        }
+
+        loadUnread();
+
+        return () => {
+            active = false;
+        };
+    }, [user?.id]);
+
+    useEffect(() => {
+        if (
+            !user?.id ||
+            !selectedConversation?.id ||
+            loadingMessages
+        ) {
+            return;
+        }
+
+        let active = true;
+
+        async function markRead() {
+            try {
+                await markConversationRead(
+                    selectedConversation.id,
+                    user.id
+                );
+
+                const counts = await fetchUnreadCounts(user.id);
+
+                if (active) {
+                    setUnreadCounts(counts);
+                }
+            } catch (err) {
+                console.error("Mark read error:", err);
+            }
+        }
+
+        markRead();
+
+        return () => {
+            active = false;
+        };
+    }, [selectedConversation?.id, user?.id, loadingMessages]);
+
+    useEffect(() => {
+        if (!user?.id || !conversations.length) return;
+
+        const conversationIds = conversations.map((c) => c.id);
+
+        const unsubscribe = subscribeToUnreadMessages(
+            conversationIds,
+            async () => {
+                try {
+                    const counts = await fetchUnreadCounts(user.id);
+                    setUnreadCounts(counts);
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+        );
+
+        return unsubscribe;
+    }, [user?.id, conversations]);
+
     if (!user) {
         return <p>Please log in to view messages.</p>;
     }
@@ -284,6 +370,14 @@ function Messages() {
                                                     : "Direct message"}
                                             </span>
                                         </div>
+
+                                        {(unreadCounts[conversation.id] || 0) > 0 && (
+                                            <span className="unread-count">
+                                                {unreadCounts[conversation.id] > 99
+                                                    ? "99+"
+                                                    : unreadCounts[conversation.id]}
+                                            </span>
+                                        )}
                                     </button>
                                 );
                             })

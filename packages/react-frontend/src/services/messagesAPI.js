@@ -128,3 +128,92 @@ export function subscribeToMessages(
         supabase.removeChannel(channel);
     };
 }
+
+export async function fetchUnreadCounts(userId) {
+    if (!userId) return {};
+
+    const { data: memberships, error: memberError } =
+        await supabase
+            .from("conversation_members")
+            .select("conversation_id, last_read_at, joined_at")
+            .eq("user_id", userId);
+
+    if (memberError) throw memberError;
+
+    const counts = {};
+
+    await Promise.all(
+        memberships.map(async (membership) => {
+            let query = supabase
+                .from("messages")
+                .select("id", {
+                    count: "exact",
+                    head: true,
+                })
+                .eq("conversation_id", membership.conversation_id)
+                .neq("sender_id", userId);
+
+            const since =
+                membership.last_read_at ||
+                membership.joined_at;
+
+            if (since) {
+                query = query.gt("created_at", since);
+            }
+
+            const { count, error } = await query;
+
+            if (error) throw error;
+
+            counts[membership.conversation_id] = count || 0;
+        })
+    );
+
+    return counts;
+}
+
+export async function markConversationRead(
+    conversationId,
+    userId
+) {
+    const { error } = await supabase
+        .from("conversation_members")
+        .update({
+            last_read_at: new Date().toISOString(),
+        })
+        .eq("conversation_id", conversationId)
+        .eq("user_id", userId);
+
+    if (error) throw error;
+}
+
+export function subscribeToUnreadMessages(
+    conversationIds,
+    onNewMessage
+) {
+    if (!conversationIds.length) {
+        return () => {};
+    }
+
+    const channels = conversationIds.map((conversationId) =>
+        supabase
+            .channel(`unread-${conversationId}`)
+            .on(
+                "postgres_changes",
+                {
+                    event: "INSERT",
+                    schema: "public",
+                    table: "messages",
+                    filter: `conversation_id=eq.${conversationId}`,
+                },
+                onNewMessage
+            )
+            .subscribe()
+    );
+
+    return () => {
+        channels.forEach((channel) => {
+            supabase.removeChannel(channel);
+        });
+    };
+}
