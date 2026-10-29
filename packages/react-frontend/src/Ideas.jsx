@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 
 import IdeaForm from "./components/IdeaForm";
+import IdeaDetailModal from "./components/IdeaDetailModal";
+import IdeaAnalysis from "./components/IdeaAnalysis";
+import IdeaEnhance from "./components/IdeaEnhance";
 import IdeasTable from "./components/IdeasTable";
 
 import { analyzeIdea, enhanceIdea } from "./services/analyzeIdea";
@@ -15,6 +18,7 @@ import {
 function Ideas() {
   const [ideas, setIdeas] = useState([]);
   const [ideaToEdit, setIdeaToEdit] = useState(null);
+  const [selectedIdea, setSelectedIdea] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [analyses, setAnalyses] = useState({});
@@ -63,6 +67,10 @@ function Ideas() {
     if (ideaToEdit?.id === updatedIdea.id) {
       setIdeaToEdit(updatedIdea);
     }
+
+    setSelectedIdea((currentIdea) =>
+      currentIdea?.id === updatedIdea.id ? updatedIdea : currentIdea,
+    );
   }
 
   function showEnhancement(id, result) {
@@ -138,6 +146,7 @@ function Ideas() {
 
   function handleEdit(idea) {
     setIdeaToEdit(idea);
+    setSelectedIdea(null);
     setError("");
   }
 
@@ -160,6 +169,10 @@ function Ideas() {
       if (ideaToEdit?.id === id) {
         setIdeaToEdit(null);
       }
+
+      setSelectedIdea((currentIdea) =>
+        currentIdea?.id === id ? null : currentIdea,
+      );
 
       setAnalyses((current) => {
         const next = { ...current };
@@ -330,6 +343,23 @@ function Ideas() {
     }
   }
 
+  const selectedAnalysis = selectedIdea ? analyses[selectedIdea.id] : null;
+  const selectedEnhancement = selectedIdea
+    ? enhancements[selectedIdea.id]
+    : null;
+  const showingSelectedAnalysis =
+    Boolean(openPanel && selectedIdea) &&
+    openPanel.id === selectedIdea.id &&
+    openPanel.mode === "analysis";
+  const showingSelectedEnhance =
+    Boolean(openPanel && selectedIdea) &&
+    openPanel.id === selectedIdea.id &&
+    openPanel.mode === "enhance";
+  const selectedEnhancementApplied =
+    selectedEnhancement?.result &&
+    selectedIdea.title === selectedEnhancement.result.enhancedTitle &&
+    selectedIdea.description === selectedEnhancement.result.enhancedDescription;
+
   return (
     <div className="ideas-page">
       <header className="page-header">
@@ -361,23 +391,77 @@ function Ideas() {
         ) : (
           <IdeasTable
             ideas={ideas}
-            analyses={analyses}
-            enhancements={enhancements}
-            openPanel={openPanel}
-            analyzingId={analyzingId}
-            enhancingId={enhancingId}
-            applyingId={applyingId}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onToggleVisibility={handleToggleVisibility}
-            onAnalyze={handleAnalyze}
-            onRefreshAnalysis={runAnalysis}
-            onEnhance={handleEnhance}
-            onRefreshEnhance={runEnhance}
-            onApplyEnhancement={handleApplyEnhancement}
+            onSelectIdea={setSelectedIdea}
           />
         )}
       </section>
+
+      {selectedIdea && (
+        <IdeaDetailModal
+          idea={selectedIdea}
+          author="You"
+          isOwner
+          onClose={() => setSelectedIdea(null)}
+        >
+          <div className="idea-modal-actions">
+            <button
+              type="button"
+              className="enhance"
+              onClick={() => handleEnhance(selectedIdea)}
+            >
+              {showingSelectedEnhance ? "Hide enhance" : "Enhance"}
+            </button>
+            <button type="button" onClick={() => handleAnalyze(selectedIdea)}>
+              {showingSelectedAnalysis ? "Hide analysis" : "Analyze"}
+            </button>
+            <button type="button" onClick={() => handleEdit(selectedIdea)}>
+              Edit
+            </button>
+            <button
+              type="button"
+              onClick={() => handleToggleVisibility(selectedIdea)}
+            >
+              {selectedIdea.is_public ? "Make private" : "Make public"}
+            </button>
+            <button
+              type="button"
+              className="danger"
+              onClick={() => handleDelete(selectedIdea.id)}
+            >
+              Delete
+            </button>
+          </div>
+
+          {showingSelectedAnalysis && (
+            <IdeaAnalysis
+              analysis={selectedAnalysis?.result}
+              loading={analyzingId === selectedIdea.id}
+              error={selectedAnalysis?.error}
+              onRefresh={() => runAnalysis(selectedIdea)}
+            />
+          )}
+
+          {showingSelectedEnhance && (
+            <div data-idea-panel={selectedIdea.id}>
+              <IdeaEnhance
+                enhancement={selectedEnhancement?.result}
+                loading={enhancingId === selectedIdea.id}
+                error={selectedEnhancement?.error}
+                onRetry={() => runEnhance(selectedIdea)}
+                onApply={() =>
+                  handleApplyEnhancement(
+                    selectedIdea,
+                    selectedEnhancement.result,
+                  )
+                }
+                applying={applyingId === selectedIdea.id}
+                applied={selectedEnhancementApplied}
+                note="Saved. Use the sharper version, or keep what you wrote."
+              />
+            </div>
+          )}
+        </IdeaDetailModal>
+      )}
     </div>
   );
 }

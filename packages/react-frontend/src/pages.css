@@ -964,6 +964,15 @@
   padding: 20px 22px;
 }
 
+.board-card-clickable {
+  cursor: pointer;
+}
+
+.board-card-clickable:focus-visible {
+  outline: 3px solid var(--accent-ink);
+  outline-offset: 3px;
+}
+
 .board-card-top {
   display: flex;
   flex-wrap: wrap;
@@ -989,10 +998,140 @@
 }
 
 .board-description {
+  display: -webkit-box;
   margin: 0;
+  overflow: hidden;
   color: var(--ink-soft);
   line-height: 1.6;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.idea-preview-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.idea-preview-link:hover,
+.idea-preview-link:focus-visible {
+  color: var(--accent-ink);
+  text-decoration: underline;
+}
+
+.idea-preview-description {
+  max-width: 360px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.idea-modal-backdrop {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(24 30 40 / 55%);
+}
+
+.idea-modal {
+  position: relative;
+  width: min(760px, 100%);
+  max-height: min(820px, calc(100vh - 48px));
+  overflow-y: auto;
+  padding: 32px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--bg);
+  box-shadow: 0 24px 64px rgb(0 0 0 / 25%);
+}
+
+.idea-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink);
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.idea-modal-close:hover {
+  background: var(--accent-soft);
+}
+
+.idea-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding-right: 36px;
+}
+
+.idea-modal-header h2 {
+  margin: 4px 0 0;
+  font-size: clamp(24px, 4vw, 34px);
+}
+
+.idea-modal-meta,
+.idea-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.idea-modal-meta {
+  margin: 20px 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.idea-modal-description {
+  margin: 0;
+  color: var(--ink-soft);
+  line-height: 1.7;
   white-space: pre-wrap;
+}
+
+.idea-modal-actions {
+  margin: 28px 0 20px;
+}
+
+.idea-modal-actions button {
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.idea-modal-actions button:hover {
+  border-color: var(--ink);
+}
+
+.idea-modal-actions button.enhance {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.idea-modal-actions button.danger {
+  color: #a32626;
 }
 
 .profile-page {

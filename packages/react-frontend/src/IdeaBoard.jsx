@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "./useAuth";
+import IdeaDetailModal from "./components/IdeaDetailModal";
 import { getPublicIdeas } from "./services/ideasAPi";
 
 const BOARD_FILTERS = [
@@ -56,6 +57,14 @@ function IdeaBoard() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [filterId, setFilterId] = useState("all");
+  const [selectedIdea, setSelectedIdea] = useState(null);
+
+  function handleIdeaKeyDown(event, idea) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      setSelectedIdea(idea);
+    }
+  }
 
   useEffect(() => {
     async function loadPublicIdeas() {
@@ -152,7 +161,14 @@ function IdeaBoard() {
           </p>
           <div className="board-list">
             {visibleIdeas.map((idea) => (
-              <article key={idea.id} className="board-card">
+              <article
+                key={idea.id}
+                className="board-card board-card-clickable"
+                role="button"
+                tabIndex={0}
+                onClick={() => setSelectedIdea(idea)}
+                onKeyDown={(event) => handleIdeaKeyDown(event, idea)}
+              >
                 <div className="board-card-top">
                   <h2>{idea.title}</h2>
                   {idea.user_id === user?.id && (
@@ -173,6 +189,15 @@ function IdeaBoard() {
             ))}
           </div>
         </>
+      )}
+
+      {selectedIdea && (
+        <IdeaDetailModal
+          idea={selectedIdea}
+          author={authorLabel(selectedIdea, user?.id)}
+          isOwner={selectedIdea.user_id === user?.id}
+          onClose={() => setSelectedIdea(null)}
+        />
       )}
     </div>
   );
