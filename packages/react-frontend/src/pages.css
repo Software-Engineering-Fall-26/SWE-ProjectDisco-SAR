@@ -1777,3 +1777,43 @@
     max-width: 85%;
   }
 }
+
+.unread-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+
+    background: #ef4444;
+    color: white;
+
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+/* Messages tab notification indicator */
+
+.sidebar-unread-dot {
+  display: inline-block;
+
+  width: 6px;
+  height: 6px;
+  min-width: 6px;
+
+  margin-left: auto;
+
+  background-color: #38bdf8;
+  border-radius: 50%;
+
+  box-shadow:
+    0 0 4px rgba(56, 189, 248, 1),
+    0 0 8px rgba(56, 189, 248, 0.8),
+    0 0 14px rgba(56, 189, 248, 0.5);
+}
