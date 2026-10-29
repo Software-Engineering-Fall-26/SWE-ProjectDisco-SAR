@@ -172,17 +172,13 @@ export async function fetchUnreadCounts(userId) {
     return counts;
 }
 
-export async function markConversationRead(
-    conversationId,
-    userId
-) {
-    const { error } = await supabase
-        .from("conversation_members")
-        .update({
-            last_read_at: new Date().toISOString(),
-        })
-        .eq("conversation_id", conversationId)
-        .eq("user_id", userId);
+export async function markConversationRead(conversationId) {
+    const { error } = await supabase.rpc(
+        "mark_conversation_read",
+        {
+            p_conversation_id: conversationId,
+        }
+    );
 
     if (error) throw error;
 }
