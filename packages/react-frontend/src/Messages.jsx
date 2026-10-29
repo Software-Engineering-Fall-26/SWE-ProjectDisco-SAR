@@ -33,7 +33,7 @@ function Messages() {
         if (!user?.id) return;
 
         try {
-            await markConversationRead(conversationId, user.id);
+            await markConversationRead(conversationId);
 
             // Immediately clear the conversation's unread badge.
             setUnreadCounts((current) => ({
