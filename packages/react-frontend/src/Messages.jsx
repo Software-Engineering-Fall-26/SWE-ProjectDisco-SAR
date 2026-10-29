@@ -29,6 +29,27 @@ function Messages() {
     const bottomRef = useRef(null);
     const requestRef = useRef(0);
 
+    async function markMessagesAsRead(conversationId) {
+        if (!user?.id) return;
+
+        try {
+            await markConversationRead(conversationId, user.id);
+
+            // Immediately clear the conversation's unread badge.
+            setUnreadCounts((current) => ({
+                ...current,
+                [conversationId]: 0,
+            }));
+
+            // Tell MyApp.jsx to refresh the blue dot.
+            window.dispatchEvent(
+                new Event("disco:messages-read")
+            );
+        } catch (err) {
+            console.error("Failed to mark messages as read:", err);
+        }
+    }
+
     function getOtherUser(conversation) {
         return conversation.members?.find(
             (member) => member.user_id !== user?.id
@@ -118,6 +139,12 @@ function Messages() {
                             ? current
                             : [...current, message]
                     );
+
+                    // Automatically mark incoming messages as read
+                    // while this conversation is open.
+                    if (message.sender_id !== user?.id) {
+                        markMessagesAsRead(conversationId);
+                    }
                 }
             }
         );
@@ -248,20 +275,7 @@ function Messages() {
         let active = true;
 
         async function markRead() {
-            try {
-                await markConversationRead(
-                    selectedConversation.id,
-                    user.id
-                );
-
-                const counts = await fetchUnreadCounts(user.id);
-
-                if (active) {
-                    setUnreadCounts(counts);
-                }
-            } catch (err) {
-                console.error("Mark read error:", err);
-            }
+            await markMessagesAsRead(selectedConversation.id);
         }
 
         markRead();
@@ -274,6 +288,8 @@ function Messages() {
     useEffect(() => {
         if (!user?.id || !conversations.length) return;
 
+        let active = true;
+
         const conversationIds = conversations.map((c) => c.id);
 
         const unsubscribe = subscribeToUnreadMessages(
@@ -281,6 +297,9 @@ function Messages() {
             async () => {
                 try {
                     const counts = await fetchUnreadCounts(user.id);
+
+                    if (!active) return;
+
                     setUnreadCounts(counts);
                 } catch (err) {
                     console.error(err);
@@ -288,7 +307,10 @@ function Messages() {
             }
         );
 
-        return unsubscribe;
+        return () => {
+            active = false;
+            unsubscribe();
+        };
     }, [user?.id, conversations]);
 
     if (!user) {

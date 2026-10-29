@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "./supabaseClient";
 import { fetchUnreadCounts } from "./services/messagesAPI";
 
+
 function AppLayout() {
   const { user } = useAuth();
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
@@ -22,86 +23,138 @@ function AppLayout() {
     }
 
     let active = true;
-    let channel;
+    let channels = [];
+    let refreshVersion = 0;
 
     async function refreshUnreadStatus() {
+      const version = ++refreshVersion;
+
       try {
         const counts = await fetchUnreadCounts(user.id);
+        console.log("Unread counts:", counts);
 
-        if (active) {
-          const hasUnread = Object.values(counts).some(
-            (count) => count > 0
-          );
+        if (!active || version !== refreshVersion) return;
 
-          setHasUnreadMessages(hasUnread);
-        }
+        const hasUnread = Object.values(counts).some(
+          (count) => count > 0
+        );
+
+        console.log("Setting blue dot visibility to:", hasUnread);
+
+        setHasUnreadMessages(hasUnread);
       } catch (error) {
-        console.error("Error checking unread messages:", error);
+        console.error("Unread status error:", error);
       }
     }
 
     async function initializeNotifications() {
-      // Get conversations this user belongs to
-      const { data: memberships, error } = await supabase
-        .from("conversation_members")
-        .select("conversation_id")
-        .eq("user_id", user.id);
+      try {
+        const { data: memberships, error } = await supabase
+          .from("conversation_members")
+          .select("conversation_id")
+          .eq("user_id", user.id);
 
-      if (error) {
-        console.error("Error loading memberships:", error);
-        return;
-      }
+        if (error) throw error;
+        if (!active) return;
 
-      if (!active) return;
+        // Listen to new messages in every conversation.
+        for (const membership of memberships || []) {
+          const conversationId = membership.conversation_id;
 
-      const conversationIds = new Set(
-        (memberships || []).map((m) => m.conversation_id)
-      );
+          const channel = supabase
+            .channel(`sidebar-messages-${user.id}-${conversationId}`)
+            .on(
+              "postgres_changes",
+              {
+                event: "INSERT",
+                schema: "public",
+                table: "messages",
+                filter: `conversation_id=eq.${conversationId}`,
+              },
+              (payload) => {
+                if (payload.new.sender_id !== user.id) {
+                  refreshUnreadStatus();
+                }
+              }
+            )
+            .subscribe((status) => {
+              if (status === "SUBSCRIBED") {
+                refreshUnreadStatus();
+              }
+            });
 
-      // Listen for new messages and changes to read status
-      channel = supabase
-        .channel(`sidebar-unread-${user.id}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "messages",
-          },
-          (payload) => {
-            if (
-              conversationIds.has(payload.new.conversation_id) &&
-              payload.new.sender_id !== user.id
-            ) {
+          channels.push(channel);
+        }
+
+        // Listen for read-status changes.
+        const readChannel = supabase
+          .channel(`sidebar-read-status-${user.id}`)
+          .on(
+            "postgres_changes",
+            {
+              event: "UPDATE",
+              schema: "public",
+              table: "conversation_members",
+              filter: `user_id=eq.${user.id}`,
+            },
+            (payload) => {
+              console.log("Read status updated:", payload);
               refreshUnreadStatus();
             }
-          }
-        )
-        .on(
-          "postgres_changes",
-          {
-            event: "UPDATE",
-            schema: "public",
-            table: "conversation_members",
-            filter: `user_id=eq.${user.id}`,
-          },
-          () => {
-            refreshUnreadStatus();
-          }
-        )
-        .subscribe();
+          )
+          .subscribe((status) => {
+            console.log("Read channel status:", status);
 
-      refreshUnreadStatus();
+            if (status === "SUBSCRIBED") {
+              refreshUnreadStatus();
+            }
+          });
+
+        channels.push(readChannel);
+
+        refreshUnreadStatus();
+      } catch (error) {
+        console.error("Notification setup error:", error);
+      }
     }
+
+    // Immediately refresh when the user reads messages
+    // in this browser tab.
+    window.addEventListener(
+      "disco:messages-read",
+      refreshUnreadStatus
+    );
+
+    // Refresh when returning to the browser tab.
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        refreshUnreadStatus();
+      }
+    }
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibilityChange
+    );
 
     initializeNotifications();
 
     return () => {
       active = false;
 
-      if (channel) {
+      window.removeEventListener(
+        "disco:messages-read",
+        refreshUnreadStatus
+      );
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibilityChange
+      );
+
+      channels.forEach((channel) => {
         supabase.removeChannel(channel);
-      }
+      });
     };
   }, [user?.id]);
 
