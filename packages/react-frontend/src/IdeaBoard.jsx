@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "./useAuth";
+import IdeaComments from "./components/IdeaComments";
 import IdeaDetailModal from "./components/IdeaDetailModal";
 import { getPublicIdeas } from "./services/ideasAPi";
 
@@ -197,7 +198,9 @@ function IdeaBoard() {
           author={authorLabel(selectedIdea, user?.id)}
           isOwner={selectedIdea.user_id === user?.id}
           onClose={() => setSelectedIdea(null)}
-        />
+        >
+          <IdeaComments ideaId={selectedIdea.id} currentUserId={user?.id} />
+        </IdeaDetailModal>
       )}
     </div>
   );
