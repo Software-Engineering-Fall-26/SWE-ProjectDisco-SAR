@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+
 import { useAuth } from "./useAuth";
 import { supabase } from "./supabaseClient";
+
+import ConnectedAccounts from "./ConnectedAccounts";
 
 const PRESET_TOPICS = [
   "Technology",
@@ -536,6 +539,8 @@ function Profile() {
             Messaging is not available yet. This preference is saved for later.
           </span>
         </section>
+
+        <ConnectedAccounts user={user} />
 
         {error && <p className="error-message">{error}</p>}
         {message && <p className="info-message">{message}</p>}
