@@ -2059,3 +2059,161 @@
     0 0 8px rgba(56, 189, 248, 0.8),
     0 0 14px rgba(56, 189, 248, 0.5);
 }
+
+
+/* ==========================================
+   PROFILE - CONNECTED SOCIAL ACCOUNTS
+========================================== */
+
+.profile-page .connected-accounts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.profile-page .connected-accounts h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.profile-page .connected-accounts > .field-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Individual connected account */
+
+.profile-page .connected-account-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+
+.profile-page .connected-account-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.profile-page .connected-account-info > div {
+  min-width: 0;
+}
+
+.profile-page .connected-account-info strong {
+  display: block;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.profile-page .connected-account-info p {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+
+/* Social platform icon */
+
+.profile-page .social-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.profile-page .linkedin-icon {
+  background: #0a66c2;
+  color: #ffffff;
+  letter-spacing: -0.05em;
+}
+
+/* Connection status */
+
+.profile-page .connected-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Connect button */
+
+.profile-page .connected-account-row .btn-secondary {
+  flex-shrink: 0;
+  width: auto;
+  min-height: 38px;
+}
+
+.profile-page .connected-account-row .btn-secondary:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+/* Mobile responsiveness */
+
+@media (max-width: 480px) {
+  .profile-page .connected-account-row {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .profile-page .connected-account-info {
+    flex: 1;
+  }
+
+  .profile-page .connected-account-row .btn-secondary {
+    margin-left: auto;
+  }
+}
+
+
+
+/* LinkedIn connected status */
+
+.profile-page .connected-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  flex-shrink: 0;
+  padding: 8px 12px;
+
+  border: 1px solid var(--line);
+  border-radius: 10px;
+
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.profile-page .connected-status span {
+  font-size: 15px;
+  font-weight: 700;
+}
+
