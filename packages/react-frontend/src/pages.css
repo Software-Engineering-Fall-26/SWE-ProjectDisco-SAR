@@ -948,6 +948,138 @@
   margin-top: 8px;
 }
 
+
+/* ==========================================
+   AUTH - GOOGLE LOGIN
+========================================== */
+
+/* Google login container */
+.auth-card .google-login-section {
+  width: 100%;
+  margin-top: 0;
+}
+
+/* Google login button */
+.auth-card .google-login-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 16px;
+
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+
+  background: var(--bg-elevated);
+  color: var(--ink);
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+/* Hover */
+.auth-card .google-login-button:hover:not(:disabled) {
+  background: var(--bg);
+  border-color: var(--ink);
+}
+
+/* Keyboard accessibility */
+.auth-card .google-login-button:focus-visible {
+  outline: none;
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* Loading / disabled */
+.auth-card .google-login-button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+/* Google logo container */
+.auth-card .google-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  width: 20px;
+  height: 20px;
+
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Google SVG logo */
+.auth-card .google-logo svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
+/* OR divider */
+.auth-card .login-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  width: 100%;
+  margin: 22px 0;
+
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.auth-card .login-divider::before,
+.auth-card .login-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.auth-card .login-divider span {
+  flex-shrink: 0;
+}
+
+/* Google login error */
+.auth-card .google-login-section .error-message {
+  margin: 12px 0 0;
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .auth-card .google-login-button {
+    min-height: 44px;
+  }
+
+  .auth-card .login-divider {
+    margin: 18px 0;
+  }
+}
+
+.auth-card .google-logo img {
+  display: block;
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
 @media (max-width: 900px) {
   .auth-shell {
     grid-template-columns: 1fr;
