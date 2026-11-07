@@ -5,6 +5,7 @@ import { describeSignupResult, formatAuthError } from "./authMessages";
 import AuthFrame from "./components/AuthFrame";
 import { useAuth } from "./useAuth";
 import "./pages.css";
+import GoogleLoginButton from "./GoogleLoginButton";
 
 function Login() {
   const { user, loading, signIn, signUp, requestPasswordReset } = useAuth();
@@ -215,6 +216,16 @@ function Login() {
           </button>
         )}
       </form>
+
+      {mode !== "reset" && (
+        <>
+          <div className="login-divider">
+            <span>or</span>
+          </div>
+
+          <GoogleLoginButton />
+        </>
+      )}
     </AuthFrame>
   );
 }
