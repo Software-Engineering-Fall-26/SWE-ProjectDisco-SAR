@@ -1,6 +1,7 @@
 import {
   handleAnalyzeRequest,
   handleEnhanceRequest,
+  handleInvestorsRequest,
 } from "./handleAnalyzeRequest.js";
 import { AnalysisError } from "./groq.js";
 
@@ -51,6 +52,7 @@ function sendJson(res, status, payload) {
 const ideaRoutes = {
   "/api/analyze-idea": handleAnalyzeRequest,
   "/api/enhance-idea": handleEnhanceRequest,
+  "/api/investors": handleInvestorsRequest,
 };
 
 function attachAnalyzeRoute(middlewares, env) {

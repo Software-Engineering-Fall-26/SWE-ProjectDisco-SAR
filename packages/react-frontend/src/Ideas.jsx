@@ -4,9 +4,14 @@ import IdeaForm from "./components/IdeaForm";
 import IdeaDetailModal from "./components/IdeaDetailModal";
 import IdeaAnalysis from "./components/IdeaAnalysis";
 import IdeaEnhance from "./components/IdeaEnhance";
+import IdeaInvestors from "./components/IdeaInvestors";
 import IdeasTable from "./components/IdeasTable";
 
-import { analyzeIdea, enhanceIdea } from "./services/analyzeIdea";
+import {
+  analyzeIdea,
+  enhanceIdea,
+  findInvestors,
+} from "./services/analyzeIdea";
 import {
   getIdeas,
   createIdea,
@@ -23,9 +28,11 @@ function Ideas() {
   const [error, setError] = useState("");
   const [analyses, setAnalyses] = useState({});
   const [enhancements, setEnhancements] = useState({});
+  const [investors, setInvestors] = useState({});
   const [openPanel, setOpenPanel] = useState(null);
   const [analyzingId, setAnalyzingId] = useState(null);
   const [enhancingId, setEnhancingId] = useState(null);
+  const [findingInvestorsId, setFindingInvestorsId] = useState(null);
   const [applyingId, setApplyingId] = useState(null);
 
   useEffect(() => {
@@ -116,6 +123,11 @@ function Ideas() {
           delete next[updatedIdea.id];
           return next;
         });
+        setInvestors((current) => {
+          const next = { ...current };
+          delete next[updatedIdea.id];
+          return next;
+        });
 
         if (idea.isPublic || meta?.accepted) {
           dismissCoach(updatedIdea.id);
@@ -180,6 +192,11 @@ function Ideas() {
         return next;
       });
       setEnhancements((current) => {
+        const next = { ...current };
+        delete next[id];
+        return next;
+      });
+      setInvestors((current) => {
         const next = { ...current };
         delete next[id];
         return next;
@@ -295,6 +312,55 @@ function Ideas() {
     runEnhance(idea);
   }
 
+  async function runFindInvestors(idea) {
+    setFindingInvestorsId(idea.id);
+    setOpenPanel({ id: idea.id, mode: "investors" });
+    setInvestors((current) => ({
+      ...current,
+      [idea.id]: {
+        result: current[idea.id]?.result ?? null,
+        error: "",
+      },
+    }));
+
+    try {
+      const result = await findInvestors(idea);
+
+      setInvestors((current) => ({
+        ...current,
+        [idea.id]: { result, error: "" },
+      }));
+    } catch (investorError) {
+      setInvestors((current) => ({
+        ...current,
+        [idea.id]: {
+          result: current[idea.id]?.result ?? null,
+          error: investorError.message,
+        },
+      }));
+    } finally {
+      setFindingInvestorsId(null);
+    }
+  }
+
+  function handleFindInvestors(idea) {
+    if (findingInvestorsId === idea.id) {
+      return;
+    }
+
+    if (openPanel?.id === idea.id && openPanel.mode === "investors") {
+      setOpenPanel(null);
+      return;
+    }
+
+    if (investors[idea.id]?.result) {
+      setOpenPanel({ id: idea.id, mode: "investors" });
+      return;
+    }
+
+    runFindInvestors(idea);
+  }
+
   async function handleApplyEnhancement(idea, enhancement) {
     setApplyingId(idea.id);
     setError("");
@@ -347,6 +413,7 @@ function Ideas() {
   const selectedEnhancement = selectedIdea
     ? enhancements[selectedIdea.id]
     : null;
+  const selectedInvestors = selectedIdea ? investors[selectedIdea.id] : null;
   const showingSelectedAnalysis =
     Boolean(openPanel && selectedIdea) &&
     openPanel.id === selectedIdea.id &&
@@ -355,6 +422,10 @@ function Ideas() {
     Boolean(openPanel && selectedIdea) &&
     openPanel.id === selectedIdea.id &&
     openPanel.mode === "enhance";
+  const showingSelectedInvestors =
+    Boolean(openPanel && selectedIdea) &&
+    openPanel.id === selectedIdea.id &&
+    openPanel.mode === "investors";
   const selectedEnhancementApplied =
     selectedEnhancement?.result &&
     selectedIdea.title === selectedEnhancement.result.enhancedTitle &&
@@ -367,8 +438,9 @@ function Ideas() {
         <h1>Ideas</h1>
         <p className="page-intro">
           Write the idea, then enhance it. You get a sharper version and the
-          specific changes that would make it stronger. It stays private until
-          you publish.
+          specific changes that would make it stronger. Open an idea to find
+          investors who publicly back that niche. It stays private until you
+          publish.
         </p>
       </header>
 
@@ -389,10 +461,7 @@ function Ideas() {
         {loading ? (
           <p className="empty-state">Loading ideas...</p>
         ) : (
-          <IdeasTable
-            ideas={ideas}
-            onSelectIdea={setSelectedIdea}
-          />
+          <IdeasTable ideas={ideas} onSelectIdea={setSelectedIdea} />
         )}
       </section>
 
@@ -413,6 +482,12 @@ function Ideas() {
             </button>
             <button type="button" onClick={() => handleAnalyze(selectedIdea)}>
               {showingSelectedAnalysis ? "Hide analysis" : "Analyze"}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleFindInvestors(selectedIdea)}
+            >
+              {showingSelectedInvestors ? "Hide investors" : "Investors"}
             </button>
             <button type="button" onClick={() => handleEdit(selectedIdea)}>
               Edit
@@ -438,6 +513,15 @@ function Ideas() {
               loading={analyzingId === selectedIdea.id}
               error={selectedAnalysis?.error}
               onRefresh={() => runAnalysis(selectedIdea)}
+            />
+          )}
+
+          {showingSelectedInvestors && (
+            <IdeaInvestors
+              result={selectedInvestors?.result}
+              loading={findingInvestorsId === selectedIdea.id}
+              error={selectedInvestors?.error}
+              onRefresh={() => runFindInvestors(selectedIdea)}
             />
           )}
 

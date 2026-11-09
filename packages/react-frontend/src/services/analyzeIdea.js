@@ -49,3 +49,11 @@ export function analyzeIdea(idea) {
 export function enhanceIdea(idea) {
   return postIdea("/api/enhance-idea", idea, "Could not enhance this idea.");
 }
+
+export function findInvestors(idea) {
+  return postIdea(
+    "/api/investors",
+    idea,
+    "Could not find investors for this idea.",
+  );
+}
