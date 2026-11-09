@@ -66,11 +66,41 @@ function groqFailure(response, payload) {
   );
 }
 
-export async function requestGroqJson({ system, user, apiKey, temperature }) {
+async function completeGroq({
+  system,
+  user,
+  apiKey,
+  temperature,
+  maxTokens,
+  responseFormat,
+  tools,
+  timeoutMs,
+}) {
   if (!apiKey) {
     throw new AnalysisError(
       "Groq is not configured. Add GROQ_API_KEY to the repo-root .env file.",
     );
+  }
+
+  const body = {
+    model: GROQ_MODEL,
+    temperature,
+    max_completion_tokens: maxTokens,
+    reasoning_effort: "low",
+    reasoning_format: "hidden",
+    messages: [
+      { role: "system", content: system },
+      { role: "user", content: user },
+    ],
+  };
+
+  if (responseFormat) {
+    body.response_format = responseFormat;
+  }
+
+  if (tools) {
+    body.tools = tools;
+    body.tool_choice = "required";
   }
 
   let response;
@@ -82,20 +112,14 @@ export async function requestGroqJson({ system, user, apiKey, temperature }) {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        model: GROQ_MODEL,
-        temperature,
-        max_completion_tokens: 1500,
-        reasoning_effort: "low",
-        reasoning_format: "hidden",
-        response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content: system },
-          { role: "user", content: user },
-        ],
-      }),
+      body: JSON.stringify(body),
+      signal: timeoutMs ? AbortSignal.timeout(timeoutMs) : undefined,
     });
-  } catch {
+  } catch (error) {
+    if (error?.name === "TimeoutError" || error?.name === "AbortError") {
+      throw new AnalysisError("Groq took too long to respond. Try again.", 504);
+    }
+
     throw new AnalysisError(
       "Could not reach Groq. Check your connection and try again.",
     );
@@ -108,7 +132,41 @@ export async function requestGroqJson({ system, user, apiKey, temperature }) {
   }
 
   const message = payload?.choices?.[0]?.message;
-  return extractJson(message?.content || message?.reasoning);
+  return message?.content || message?.reasoning || "";
+}
+
+export async function requestGroqJson({ system, user, apiKey, temperature }) {
+  const text = await completeGroq({
+    system,
+    user,
+    apiKey,
+    temperature,
+    maxTokens: 1500,
+    responseFormat: { type: "json_object" },
+  });
+
+  return extractJson(text);
+}
+
+export async function requestGroqSearch({ system, user, apiKey, temperature }) {
+  const text = await completeGroq({
+    system,
+    user,
+    apiKey,
+    temperature,
+    maxTokens: 4096,
+    tools: [{ type: "browser_search" }],
+    timeoutMs: 55000,
+  });
+  const brief = asText(text, 12000);
+
+  if (!brief) {
+    throw new AnalysisError(
+      "The search did not return any public information. Try again.",
+    );
+  }
+
+  return brief;
 }
 
 export function ideaPrompt(idea) {
