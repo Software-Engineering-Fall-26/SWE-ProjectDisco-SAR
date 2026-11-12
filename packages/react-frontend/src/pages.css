@@ -1108,6 +1108,142 @@
   font-size: 13px;
 }
 
+.board-author-link {
+  color: var(--accent-ink);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.board-author-link:hover {
+  color: var(--ink);
+}
+
+.public-profile-page {
+  width: min(900px, 100%);
+  margin: 0 auto;
+}
+
+.private-account-notice {
+  display: block;
+  margin-bottom: 20px;
+  padding: 14px 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--muted);
+  font: inherit;
+  font-weight: 700;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 24px;
+  color: var(--accent-ink);
+  font-weight: 700;
+}
+
+.public-profile-hero {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--line);
+}
+
+.public-profile-hero h1 {
+  margin: 4px 0 0;
+  font-size: clamp(30px, 5vw, 46px);
+}
+
+.public-profile-avatar {
+  display: grid;
+  width: 92px;
+  height: 92px;
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-size: 34px;
+  font-weight: 800;
+}
+
+.public-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.public-profile-username {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
+.public-profile-section {
+  margin-top: 30px;
+}
+
+.public-profile-section h2 {
+  margin: 0 0 12px;
+  font-size: 20px;
+}
+
+.public-profile-description {
+  margin: 0;
+  color: var(--ink-soft);
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.public-profile-topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.public-profile-contact p {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.public-profile-ideas {
+  display: grid;
+  gap: 12px;
+}
+
+.public-profile-idea {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.public-profile-idea h3,
+.public-profile-idea p {
+  margin: 0;
+}
+
+.public-profile-idea h3 {
+  font-size: 18px;
+}
+
+@media (max-width: 560px) {
+  .public-profile-hero {
+    align-items: flex-start;
+  }
+
+  .public-profile-avatar {
+    width: 68px;
+    height: 68px;
+    font-size: 26px;
+  }
+}
+
 .board-description {
   display: -webkit-box;
   margin: 0;

@@ -360,7 +360,7 @@ function Profile() {
           </label>
 
           <span className="field-hint">
-            Public profile viewing will be added later.
+            Your public profile can be opened from one of your public ideas.
           </span>
         </fieldset>
 
