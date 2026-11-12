@@ -55,7 +55,7 @@ export async function getPublicIdeas() {
   const { data, error } = await supabase
     .from("ideas")
     .select(
-      "id, user_id, title, description, looking_for, author_username, created_at",
+      "id, user_id, title, description, looking_for, is_public, author_username, created_at",
     )
     .eq("is_public", true)
     .order("created_at", { ascending: false });

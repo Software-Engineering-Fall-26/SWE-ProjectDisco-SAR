@@ -8,7 +8,14 @@ function formatDate(value) {
   });
 }
 
-function IdeaDetailModal({ idea, author, isOwner, onClose, children }) {
+function IdeaDetailModal({
+  idea,
+  author,
+  isOwner,
+  showVisibility = true,
+  onClose,
+  children,
+}) {
   useEffect(() => {
     function closeOnEscape(event) {
       if (event.key === "Escape") {
@@ -43,15 +50,17 @@ function IdeaDetailModal({ idea, author, isOwner, onClose, children }) {
             <p className="page-kicker">{isOwner ? "Your idea" : author}</p>
             <h2 id="idea-modal-title">{idea.title}</h2>
           </div>
-          <span
-            className={
-              idea.is_public
-                ? "visibility-badge public"
-                : "visibility-badge private"
-            }
-          >
-            {idea.is_public ? "Public" : "Private"}
-          </span>
+          {showVisibility && (
+            <span
+              className={
+                idea.is_public
+                  ? "visibility-badge public"
+                  : "visibility-badge private"
+              }
+            >
+              {idea.is_public ? "Public" : "Private"}
+            </span>
+          )}
         </header>
 
         <div className="idea-modal-meta">

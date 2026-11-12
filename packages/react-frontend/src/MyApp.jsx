@@ -5,6 +5,7 @@ import Login from "./Login";
 import Ideas from "./Ideas";
 import IdeaBoard from "./IdeaBoard";
 import Profile from "./Profile";
+import PublicProfile from "./PublicProfile";
 import ResetPassword from "./ResetPassword";
 import Messages from "./Messages";
 import { useEffect, useState } from "react";
@@ -241,6 +242,7 @@ function MyApp() {
         <Route path="/board" element={<IdeaBoard />} />
         <Route path="/messages" element={<Messages />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/members/:userId" element={<PublicProfile />} />
       </Route>
     </Routes>
   );

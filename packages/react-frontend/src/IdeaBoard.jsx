@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
 import { useAuth } from "./useAuth";
 import IdeaComments from "./components/IdeaComments";
@@ -61,6 +62,10 @@ function IdeaBoard() {
   const [selectedIdea, setSelectedIdea] = useState(null);
 
   function handleIdeaKeyDown(event, idea) {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       setSelectedIdea(idea);
@@ -181,7 +186,13 @@ function IdeaBoard() {
                   <span className="looking-for-pill">
                     Looking for {idea.looking_for || "collaborators"}
                   </span>
-                  <span>{authorLabel(idea, user?.id)}</span>
+                  <Link
+                    className="board-author-link"
+                    to={`/members/${idea.user_id}`}
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    {authorLabel(idea, user?.id)}
+                  </Link>
                   <span>{formatDate(idea.created_at)}</span>
                 </div>
 
@@ -197,6 +208,7 @@ function IdeaBoard() {
           idea={selectedIdea}
           author={authorLabel(selectedIdea, user?.id)}
           isOwner={selectedIdea.user_id === user?.id}
+          showVisibility={false}
           onClose={() => setSelectedIdea(null)}
         >
           <IdeaComments ideaId={selectedIdea.id} currentUserId={user?.id} />
