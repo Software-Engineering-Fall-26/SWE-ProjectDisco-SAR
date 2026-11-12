@@ -2,8 +2,10 @@ import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 
 import { describeSignupResult, formatAuthError } from "./authMessages";
-import { useAuth } from "./AuthContext";
+import AuthFrame from "./components/AuthFrame";
+import { useAuth } from "./useAuth";
 import "./pages.css";
+import GoogleLoginButton from "./GoogleLoginButton";
 
 function Login() {
   const { user, loading, signIn, signUp, requestPasswordReset } = useAuth();
@@ -21,8 +23,11 @@ function Login() {
 
   if (loading) {
     return (
-      <div className="login-page">
-        <p className="auth-status">Loading...</p>
+      <div className="boot-screen">
+        <span className="brand-mark" aria-hidden="true">
+          D
+        </span>
+        <p>Loading Disco</p>
       </div>
     );
   }
@@ -91,21 +96,25 @@ function Login() {
   }
 
   const titles = {
-    login: "Login",
-    signup: "Create Account",
-    reset: "Reset Password",
+    login: "Log in",
+    signup: "Create your account",
+    reset: "Reset password",
+  };
+
+  const kickers = {
+    login: "Welcome back",
+    signup: "Get started",
+    reset: "Account recovery",
   };
 
   const submitLabels = {
-    login: "Log In",
-    signup: "Create Account",
-    reset: "Send Reset Link",
+    login: "Log in",
+    signup: "Create account",
+    reset: "Send reset link",
   };
 
   return (
-    <div className="login-page">
-      <h1 className="login-title">{titles[mode]}</h1>
-
+    <AuthFrame kicker={kickers[mode]} title={titles[mode]}>
       <form className="login-form" onSubmit={handleSubmit}>
         {mode === "signup" && (
           <>
@@ -144,17 +153,29 @@ function Login() {
               value={form.password}
               onChange={handleChange}
               className="login-input"
-              autoComplete={mode === "signup" ? "new-password" : "current-password"}
+              autoComplete={
+                mode === "signup" ? "new-password" : "current-password"
+              }
               minLength={6}
               required
             />
           </>
         )}
 
+        {mode === "login" && (
+          <button
+            type="button"
+            className="auth-switch-button forgot-link"
+            onClick={() => switchMode("reset")}
+          >
+            Forgot password?
+          </button>
+        )}
+
         {mode === "reset" && (
           <p className="info-message">
-            Enter the email for your account. If it exists, we will send a
-            reset link. No new account is created.
+            Enter the email for your account. If it exists, we will send a reset
+            link. No new account is created.
           </p>
         )}
 
@@ -164,16 +185,6 @@ function Login() {
         <button type="submit" className="submit-button" disabled={submitting}>
           {submitting ? "Please wait..." : submitLabels[mode]}
         </button>
-
-        {mode === "login" && (
-          <button
-            type="button"
-            className="auth-switch-button"
-            onClick={() => switchMode("reset")}
-          >
-            Forgot password?
-          </button>
-        )}
 
         {mode === "signup" && error.includes("already has an account") && (
           <button
@@ -205,7 +216,17 @@ function Login() {
           </button>
         )}
       </form>
-    </div>
+
+      {mode !== "reset" && (
+        <>
+          <div className="login-divider">
+            <span>or</span>
+          </div>
+
+          <GoogleLoginButton />
+        </>
+      )}
+    </AuthFrame>
   );
 }
 

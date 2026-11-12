@@ -1,16 +1,12 @@
-import { createContext, useContext, useEffect, useState } from "react";
-
+import { useEffect, useState } from "react";
+import { AuthContext } from "./auth-context";
 import { isSupabaseConfigured, supabase } from "./supabaseClient";
-
-const AuthContext = createContext(null);
-
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(supabase));
 
   useEffect(() => {
     if (!supabase) {
-      setLoading(false);
       return;
     }
 
@@ -54,6 +50,23 @@ export function AuthProvider({ children }) {
     if (error) {
       throw error;
     }
+  }
+
+  async function signInWithGoogle() {
+    requireSupabase();
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/ideas`,
+      },
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    return data;
   }
 
   async function signUp(email, password, username) {
@@ -128,6 +141,7 @@ export function AuthProvider({ children }) {
         loading,
         isConfigured: isSupabaseConfigured,
         signIn,
+        signInWithGoogle,
         signUp,
         signOut,
         requestPasswordReset,
@@ -138,14 +152,4 @@ export function AuthProvider({ children }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-
-  if (!context) {
-    throw new Error("useAuth must be used inside AuthProvider.");
-  }
-
-  return context;
 }

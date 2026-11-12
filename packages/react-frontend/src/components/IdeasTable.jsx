@@ -1,6 +1,10 @@
-function IdeasTable({ ideas, onEdit, onDelete, onToggleVisibility }) {
+function IdeasTable({ ideas, onSelectIdea }) {
   if (ideas.length === 0) {
-    return <p>No ideas have been added yet.</p>;
+    return (
+      <p className="empty-state">
+        No ideas yet. Start with a rough one above, then enhance it.
+      </p>
+    );
   }
 
   return (
@@ -12,14 +16,21 @@ function IdeasTable({ ideas, onEdit, onDelete, onToggleVisibility }) {
             <th>Looking for</th>
             <th>Visibility</th>
             <th>Description</th>
-            <th>Actions</th>
           </tr>
         </thead>
 
         <tbody>
           {ideas.map((idea) => (
             <tr key={idea.id}>
-              <td>{idea.title}</td>
+              <td>
+                <button
+                  type="button"
+                  className="idea-preview-link"
+                  onClick={() => onSelectIdea(idea)}
+                >
+                  {idea.title}
+                </button>
+              </td>
               <td>{idea.looking_for || "—"}</td>
               <td>
                 <span
@@ -32,21 +43,7 @@ function IdeasTable({ ideas, onEdit, onDelete, onToggleVisibility }) {
                   {idea.is_public ? "Public" : "Private"}
                 </span>
               </td>
-              <td>{idea.description}</td>
-
-              <td>
-                <button type="button" onClick={() => onEdit(idea)}>
-                  Edit
-                </button>
-
-                <button type="button" onClick={() => onToggleVisibility(idea)}>
-                  {idea.is_public ? "Make private" : "Make public"}
-                </button>
-
-                <button type="button" onClick={() => onDelete(idea.id)}>
-                  Delete
-                </button>
-              </td>
+              <td className="idea-preview-description">{idea.description}</td>
             </tr>
           ))}
         </tbody>

@@ -1,8 +1,17 @@
 import { useEffect, useState } from "react";
 
 import IdeaForm from "./components/IdeaForm";
+import IdeaDetailModal from "./components/IdeaDetailModal";
+import IdeaAnalysis from "./components/IdeaAnalysis";
+import IdeaEnhance from "./components/IdeaEnhance";
+import IdeaInvestors from "./components/IdeaInvestors";
 import IdeasTable from "./components/IdeasTable";
 
+import {
+  analyzeIdea,
+  enhanceIdea,
+  findInvestors,
+} from "./services/analyzeIdea";
 import {
   getIdeas,
   createIdea,
@@ -14,16 +23,25 @@ import {
 function Ideas() {
   const [ideas, setIdeas] = useState([]);
   const [ideaToEdit, setIdeaToEdit] = useState(null);
+  const [selectedIdea, setSelectedIdea] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [analyses, setAnalyses] = useState({});
+  const [enhancements, setEnhancements] = useState({});
+  const [investors, setInvestors] = useState({});
+  const [openPanel, setOpenPanel] = useState(null);
+  const [analyzingId, setAnalyzingId] = useState(null);
+  const [enhancingId, setEnhancingId] = useState(null);
+  const [findingInvestorsId, setFindingInvestorsId] = useState(null);
+  const [applyingId, setApplyingId] = useState(null);
 
   useEffect(() => {
     async function loadIdeas() {
       try {
         const loadedIdeas = await getIdeas();
         setIdeas(loadedIdeas);
-      } catch (error) {
-        setError(error.message);
+      } catch (loadError) {
+        setError(loadError.message);
       } finally {
         setLoading(false);
       }
@@ -32,38 +50,115 @@ function Ideas() {
     loadIdeas();
   }, []);
 
-  async function handleSave(idea) {
+  useEffect(() => {
+    if (!openPanel || openPanel.mode !== "enhance") {
+      return;
+    }
+
+    document
+      .querySelector(`[data-idea-panel="${openPanel.id}"]`)
+      ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [openPanel]);
+
+  function replaceIdea(updatedIdea) {
+    setIdeas((current) =>
+      current.map((idea) => {
+        if (idea.id === updatedIdea.id) {
+          return updatedIdea;
+        }
+
+        return idea;
+      }),
+    );
+
+    if (ideaToEdit?.id === updatedIdea.id) {
+      setIdeaToEdit(updatedIdea);
+    }
+
+    setSelectedIdea((currentIdea) =>
+      currentIdea?.id === updatedIdea.id ? updatedIdea : currentIdea,
+    );
+  }
+
+  function showEnhancement(id, result) {
+    setEnhancements((current) => ({
+      ...current,
+      [id]: { result, error: "" },
+    }));
+    setOpenPanel({ id, mode: "enhance" });
+  }
+
+  function dismissCoach(id) {
+    setAnalyses((current) => {
+      if (!current[id]) {
+        return current;
+      }
+
+      const next = { ...current };
+      delete next[id];
+      return next;
+    });
+    setEnhancements((current) => {
+      if (!current[id]) {
+        return current;
+      }
+
+      const next = { ...current };
+      delete next[id];
+      return next;
+    });
+    setOpenPanel((current) => (current?.id === id ? null : current));
+  }
+
+  async function handleSave(idea, meta) {
     setError("");
 
     try {
       if (ideaToEdit) {
         const updatedIdea = await updateIdea(ideaToEdit.id, idea);
-
-        setIdeas(
-          ideas.map((currentIdea) => {
-            if (currentIdea.id === updatedIdea.id) {
-              return updatedIdea;
-            }
-
-            return currentIdea;
-          }),
-        );
-
+        replaceIdea(updatedIdea);
         setIdeaToEdit(null);
+        setAnalyses((current) => {
+          const next = { ...current };
+          delete next[updatedIdea.id];
+          return next;
+        });
+        setInvestors((current) => {
+          const next = { ...current };
+          delete next[updatedIdea.id];
+          return next;
+        });
+
+        if (idea.isPublic || meta?.accepted) {
+          dismissCoach(updatedIdea.id);
+        } else if (meta?.enhancement) {
+          showEnhancement(updatedIdea.id, meta.enhancement);
+        } else {
+          dismissCoach(updatedIdea.id);
+        }
       } else {
         const newIdea = await createIdea(idea);
-        setIdeas([...ideas, newIdea]);
+        setIdeas((current) => [newIdea, ...current]);
+
+        if (idea.isPublic || meta?.accepted) {
+          dismissCoach(newIdea.id);
+        } else if (meta?.enhancement) {
+          showEnhancement(newIdea.id, meta.enhancement);
+        } else {
+          runEnhance(newIdea);
+        }
       }
 
       return true;
-    } catch (error) {
-      setError(error.message);
+    } catch (saveError) {
+      setError(saveError.message);
       return false;
     }
   }
 
   function handleEdit(idea) {
     setIdeaToEdit(idea);
+    setSelectedIdea(null);
     setError("");
   }
 
@@ -81,17 +176,37 @@ function Ideas() {
     try {
       await deleteIdea(id);
 
-      setIdeas(
-        ideas.filter((idea) => {
-          return idea.id !== id;
-        }),
-      );
+      setIdeas((current) => current.filter((idea) => idea.id !== id));
 
       if (ideaToEdit?.id === id) {
         setIdeaToEdit(null);
       }
-    } catch (error) {
-      setError(error.message);
+
+      setSelectedIdea((currentIdea) =>
+        currentIdea?.id === id ? null : currentIdea,
+      );
+
+      setAnalyses((current) => {
+        const next = { ...current };
+        delete next[id];
+        return next;
+      });
+      setEnhancements((current) => {
+        const next = { ...current };
+        delete next[id];
+        return next;
+      });
+      setInvestors((current) => {
+        const next = { ...current };
+        delete next[id];
+        return next;
+      });
+
+      if (openPanel?.id === id) {
+        setOpenPanel(null);
+      }
+    } catch (deleteError) {
+      setError(deleteError.message);
     }
   }
 
@@ -99,14 +214,176 @@ function Ideas() {
     setIdeaToEdit(null);
   }
 
-  async function handleToggleVisibility(idea) {
-    const nextPublic = !idea.is_public;
+  async function runAnalysis(idea) {
+    setAnalyzingId(idea.id);
+    setOpenPanel({ id: idea.id, mode: "analysis" });
+    setAnalyses((current) => ({
+      ...current,
+      [idea.id]: {
+        result: current[idea.id]?.result ?? null,
+        error: "",
+      },
+    }));
 
-    if (nextPublic && !idea.looking_for?.trim()) {
-      setError("Say what this idea is looking for before making it public.");
-      setIdeaToEdit(idea);
+    try {
+      const result = await analyzeIdea(idea);
+
+      setAnalyses((current) => ({
+        ...current,
+        [idea.id]: { result, error: "" },
+      }));
+    } catch (analysisError) {
+      setAnalyses((current) => ({
+        ...current,
+        [idea.id]: {
+          result: null,
+          error: analysisError.message,
+        },
+      }));
+    } finally {
+      setAnalyzingId(null);
+    }
+  }
+
+  function handleAnalyze(idea) {
+    if (analyzingId === idea.id) {
       return;
     }
+
+    if (openPanel?.id === idea.id && openPanel.mode === "analysis") {
+      setOpenPanel(null);
+      return;
+    }
+
+    if (analyses[idea.id]?.result) {
+      setOpenPanel({ id: idea.id, mode: "analysis" });
+      return;
+    }
+
+    runAnalysis(idea);
+  }
+
+  async function runEnhance(idea) {
+    setEnhancingId(idea.id);
+    setOpenPanel({ id: idea.id, mode: "enhance" });
+    setEnhancements((current) => ({
+      ...current,
+      [idea.id]: {
+        result: current[idea.id]?.result ?? null,
+        error: "",
+      },
+    }));
+
+    try {
+      const result = await enhanceIdea(idea);
+
+      setEnhancements((current) => ({
+        ...current,
+        [idea.id]: { result, error: "" },
+      }));
+    } catch (enhanceError) {
+      setEnhancements((current) => ({
+        ...current,
+        [idea.id]: {
+          result: null,
+          error: enhanceError.message,
+        },
+      }));
+    } finally {
+      setEnhancingId(null);
+    }
+  }
+
+  function handleEnhance(idea) {
+    if (enhancingId === idea.id) {
+      return;
+    }
+
+    if (openPanel?.id === idea.id && openPanel.mode === "enhance") {
+      setOpenPanel(null);
+      return;
+    }
+
+    if (enhancements[idea.id]?.result) {
+      setOpenPanel({ id: idea.id, mode: "enhance" });
+      return;
+    }
+
+    runEnhance(idea);
+  }
+
+  async function runFindInvestors(idea) {
+    setFindingInvestorsId(idea.id);
+    setOpenPanel({ id: idea.id, mode: "investors" });
+    setInvestors((current) => ({
+      ...current,
+      [idea.id]: {
+        result: current[idea.id]?.result ?? null,
+        error: "",
+      },
+    }));
+
+    try {
+      const result = await findInvestors(idea);
+
+      setInvestors((current) => ({
+        ...current,
+        [idea.id]: { result, error: "" },
+      }));
+    } catch (investorError) {
+      setInvestors((current) => ({
+        ...current,
+        [idea.id]: {
+          result: current[idea.id]?.result ?? null,
+          error: investorError.message,
+        },
+      }));
+    } finally {
+      setFindingInvestorsId(null);
+    }
+  }
+
+  function handleFindInvestors(idea) {
+    if (findingInvestorsId === idea.id) {
+      return;
+    }
+
+    if (openPanel?.id === idea.id && openPanel.mode === "investors") {
+      setOpenPanel(null);
+      return;
+    }
+
+    if (investors[idea.id]?.result) {
+      setOpenPanel({ id: idea.id, mode: "investors" });
+      return;
+    }
+
+    runFindInvestors(idea);
+  }
+
+  async function handleApplyEnhancement(idea, enhancement) {
+    setApplyingId(idea.id);
+    setError("");
+
+    try {
+      const updatedIdea = await updateIdea(idea.id, {
+        title: enhancement.enhancedTitle,
+        description: enhancement.enhancedDescription,
+        lookingFor: idea.looking_for || "",
+        isPublic: Boolean(idea.is_public),
+      });
+
+      replaceIdea(updatedIdea);
+      dismissCoach(idea.id);
+    } catch (applyError) {
+      setError(applyError.message);
+    } finally {
+      setApplyingId(null);
+    }
+  }
+
+  async function handleToggleVisibility(idea) {
+    const nextPublic = !idea.is_public;
 
     if (nextPublic) {
       const shouldPublish = window.confirm(
@@ -122,32 +399,50 @@ function Ideas() {
 
     try {
       const updatedIdea = await setIdeaVisibility(idea.id, nextPublic);
+      replaceIdea(updatedIdea);
 
-      setIdeas(
-        ideas.map((currentIdea) => {
-          if (currentIdea.id === updatedIdea.id) {
-            return updatedIdea;
-          }
-
-          return currentIdea;
-        }),
-      );
-
-      if (ideaToEdit?.id === updatedIdea.id) {
-        setIdeaToEdit(updatedIdea);
+      if (nextPublic) {
+        dismissCoach(idea.id);
       }
     } catch (toggleError) {
       setError(toggleError.message);
     }
   }
 
+  const selectedAnalysis = selectedIdea ? analyses[selectedIdea.id] : null;
+  const selectedEnhancement = selectedIdea
+    ? enhancements[selectedIdea.id]
+    : null;
+  const selectedInvestors = selectedIdea ? investors[selectedIdea.id] : null;
+  const showingSelectedAnalysis =
+    Boolean(openPanel && selectedIdea) &&
+    openPanel.id === selectedIdea.id &&
+    openPanel.mode === "analysis";
+  const showingSelectedEnhance =
+    Boolean(openPanel && selectedIdea) &&
+    openPanel.id === selectedIdea.id &&
+    openPanel.mode === "enhance";
+  const showingSelectedInvestors =
+    Boolean(openPanel && selectedIdea) &&
+    openPanel.id === selectedIdea.id &&
+    openPanel.mode === "investors";
+  const selectedEnhancementApplied =
+    selectedEnhancement?.result &&
+    selectedIdea.title === selectedEnhancement.result.enhancedTitle &&
+    selectedIdea.description === selectedEnhancement.result.enhancedDescription;
+
   return (
     <div className="ideas-page">
-      <h1>Ideas</h1>
-      <p className="page-intro">
-        Ideas stay private unless you publish them. Public ideas show up on the
-        Idea Board for other signed-in users.
-      </p>
+      <header className="page-header">
+        <p className="page-kicker">Workspace</p>
+        <h1>Ideas</h1>
+        <p className="page-intro">
+          Write the idea, then enhance it. You get a sharper version and the
+          specific changes that would make it stronger. Open an idea to find
+          investors who publicly back that niche. It stays private until you
+          publish.
+        </p>
+      </header>
 
       {error && <p className="error-message">{error}</p>}
 
@@ -158,15 +453,98 @@ function Ideas() {
         onCancel={cancelEdit}
       />
 
-      {loading ? (
-        <p>Loading ideas...</p>
-      ) : (
-        <IdeasTable
-          ideas={ideas}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onToggleVisibility={handleToggleVisibility}
-        />
+      <section className="ideas-list">
+        <div className="section-heading">
+          <h2>Your ideas</h2>
+        </div>
+
+        {loading ? (
+          <p className="empty-state">Loading ideas...</p>
+        ) : (
+          <IdeasTable ideas={ideas} onSelectIdea={setSelectedIdea} />
+        )}
+      </section>
+
+      {selectedIdea && (
+        <IdeaDetailModal
+          idea={selectedIdea}
+          author="You"
+          isOwner
+          onClose={() => setSelectedIdea(null)}
+        >
+          <div className="idea-modal-actions">
+            <button
+              type="button"
+              className="enhance"
+              onClick={() => handleEnhance(selectedIdea)}
+            >
+              {showingSelectedEnhance ? "Hide enhance" : "Enhance"}
+            </button>
+            <button type="button" onClick={() => handleAnalyze(selectedIdea)}>
+              {showingSelectedAnalysis ? "Hide analysis" : "Analyze"}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleFindInvestors(selectedIdea)}
+            >
+              {showingSelectedInvestors ? "Hide investors" : "Investors"}
+            </button>
+            <button type="button" onClick={() => handleEdit(selectedIdea)}>
+              Edit
+            </button>
+            <button
+              type="button"
+              onClick={() => handleToggleVisibility(selectedIdea)}
+            >
+              {selectedIdea.is_public ? "Make private" : "Make public"}
+            </button>
+            <button
+              type="button"
+              className="danger"
+              onClick={() => handleDelete(selectedIdea.id)}
+            >
+              Delete
+            </button>
+          </div>
+
+          {showingSelectedAnalysis && (
+            <IdeaAnalysis
+              analysis={selectedAnalysis?.result}
+              loading={analyzingId === selectedIdea.id}
+              error={selectedAnalysis?.error}
+              onRefresh={() => runAnalysis(selectedIdea)}
+            />
+          )}
+
+          {showingSelectedInvestors && (
+            <IdeaInvestors
+              result={selectedInvestors?.result}
+              loading={findingInvestorsId === selectedIdea.id}
+              error={selectedInvestors?.error}
+              onRefresh={() => runFindInvestors(selectedIdea)}
+            />
+          )}
+
+          {showingSelectedEnhance && (
+            <div data-idea-panel={selectedIdea.id}>
+              <IdeaEnhance
+                enhancement={selectedEnhancement?.result}
+                loading={enhancingId === selectedIdea.id}
+                error={selectedEnhancement?.error}
+                onRetry={() => runEnhance(selectedIdea)}
+                onApply={() =>
+                  handleApplyEnhancement(
+                    selectedIdea,
+                    selectedEnhancement.result,
+                  )
+                }
+                applying={applyingId === selectedIdea.id}
+                applied={selectedEnhancementApplied}
+                note="Saved. Use the sharper version, or keep what you wrote."
+              />
+            </div>
+          )}
+        </IdeaDetailModal>
       )}
     </div>
   );
