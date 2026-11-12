@@ -4,6 +4,9 @@ import { enhanceIdea } from "../services/analyzeIdea";
 import IdeaEnhance from "./IdeaEnhance";
 import LookingForSelect from "./LookingForSelect";
 
+const IDEA_TITLE_MAX_LENGTH = 100;
+const IDEA_DESCRIPTION_MAX_LENGTH = 2000;
+
 function IdeaForm({ ideaToEdit, onSave, onCancel }) {
   const [title, setTitle] = useState(ideaToEdit?.title ?? "");
   const [description, setDescription] = useState(ideaToEdit?.description ?? "");
@@ -199,8 +202,12 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
           value={title}
           placeholder="Neighborhood tool library"
           onChange={(event) => updateTitle(event.target.value)}
+          maxLength={IDEA_TITLE_MAX_LENGTH}
           required
         />
+        <span className="character-count">
+          {title.length}/{IDEA_TITLE_MAX_LENGTH}
+        </span>
       </label>
 
       <div className="looking-for-field">
@@ -218,9 +225,13 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
           value={description}
           placeholder="Who it's for, the problem, and what the product does."
           onChange={(event) => updateDescription(event.target.value)}
+          maxLength={IDEA_DESCRIPTION_MAX_LENGTH}
           required
           rows={4}
         />
+        <span className="character-count">
+          {description.length}/{IDEA_DESCRIPTION_MAX_LENGTH}
+        </span>
       </label>
 
       <fieldset className="visibility-fieldset full-width">

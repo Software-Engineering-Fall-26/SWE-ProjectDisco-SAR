@@ -475,6 +475,15 @@
   line-height: 1.4;
 }
 
+.character-count {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
 .idea-form .error-message,
 .change-email-form .error-message,
 .change-email-form .info-message,
@@ -2595,4 +2604,3 @@
   font-size: 15px;
   font-weight: 700;
 }
-

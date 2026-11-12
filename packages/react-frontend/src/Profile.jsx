@@ -21,6 +21,9 @@ const PRESET_TOPICS = [
   "Sustainability",
 ];
 
+const DISPLAY_NAME_MAX_LENGTH = 50;
+const PROFILE_DESCRIPTION_MAX_LENGTH = 500;
+const CUSTOM_TOPIC_MAX_LENGTH = 40;
 function Profile() {
   const { user, signOut, changeEmail } = useAuth();
   const navigate = useNavigate();
@@ -321,8 +324,12 @@ function Profile() {
             name="display_name"
             value={profile.display_name}
             onChange={handleChange}
+            maxLength={DISPLAY_NAME_MAX_LENGTH}
             required
           />
+          <span className="character-count">
+            {profile.display_name.length}/{DISPLAY_NAME_MAX_LENGTH}
+          </span>
         </label>
 
         <label>
@@ -331,9 +338,13 @@ function Profile() {
             name="description"
             value={profile.description}
             onChange={handleChange}
+            maxLength={PROFILE_DESCRIPTION_MAX_LENGTH}
             rows={5}
             placeholder="Tell people a little about yourself."
           />
+          <span className="character-count">
+            {profile.description.length}/{PROFILE_DESCRIPTION_MAX_LENGTH}
+          </span>
         </label>
 
         <fieldset className="profile-visibility-fieldset">
@@ -395,8 +406,12 @@ function Profile() {
               type="text"
               value={customTopic}
               onChange={(event) => setCustomTopic(event.target.value)}
+              maxLength={CUSTOM_TOPIC_MAX_LENGTH}
               placeholder="For example, Accessibility"
             />
+            <span className="character-count">
+              {customTopic.length}/{CUSTOM_TOPIC_MAX_LENGTH}
+            </span>
           </label>
 
           <button type="button" className="btn-secondary" onClick={addCustomTopic}>
