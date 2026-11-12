@@ -10,6 +10,9 @@ const LOOKING_FOR_SUGGESTIONS = [
   "Early users",
 ];
 
+const IDEA_TITLE_MAX_LENGTH = 100;
+const IDEA_DESCRIPTION_MAX_LENGTH = 2000;
+
 function IdeaForm({ ideaToEdit, onSave, onCancel }) {
   const [title, setTitle] = useState(ideaToEdit?.title ?? "");
   const [description, setDescription] = useState(ideaToEdit?.description ?? "");
@@ -30,7 +33,6 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
     setFormError("");
 
     const wasEditing = Boolean(ideaToEdit);
-
     const idea = {
       title: title.trim(),
       description: description.trim(),
@@ -56,8 +58,12 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
           type="text"
           value={title}
           onChange={(event) => setTitle(event.target.value)}
+          maxLength={IDEA_TITLE_MAX_LENGTH}
           required
         />
+        <span className="character-count">
+          {title.length}/{IDEA_TITLE_MAX_LENGTH}
+        </span>
       </label>
 
       <label>
@@ -83,9 +89,13 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
         <textarea
           value={description}
           onChange={(event) => setDescription(event.target.value)}
+          maxLength={IDEA_DESCRIPTION_MAX_LENGTH}
           required
           rows={3}
         />
+        <span className="character-count">
+          {description.length}/{IDEA_DESCRIPTION_MAX_LENGTH}
+        </span>
       </label>
 
       <fieldset className="visibility-fieldset full-width">

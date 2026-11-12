@@ -332,6 +332,15 @@
   font-weight: normal;
 }
 
+.character-count {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
 .idea-form .error-message {
   margin: 0;
   color: var(--accent-color);
