@@ -203,17 +203,36 @@ function IdeaBoard() {
         </>
       )}
 
-      {selectedIdea && (
-        <IdeaDetailModal
-          idea={selectedIdea}
-          author={authorLabel(selectedIdea, user?.id)}
-          isOwner={selectedIdea.user_id === user?.id}
-          showVisibility={false}
-          onClose={() => setSelectedIdea(null)}
-        >
-          <IdeaComments ideaId={selectedIdea.id} currentUserId={user?.id} />
-        </IdeaDetailModal>
-      )}
+
+        {selectedIdea && (
+          <IdeaDetailModal
+            idea={selectedIdea}
+            author={authorLabel(selectedIdea, user?.id)}
+            isOwner={selectedIdea.user_id === user?.id}
+            showVisibility={false}
+            onClose={() => setSelectedIdea(null)}
+          >
+            {user && selectedIdea.user_id !== user.id && (
+              <div className="idea-collaboration-section">
+                <button
+                  type="button"
+                  className="idea-collaboration-button"
+                  disabled
+                  title="Collaboration requests are coming soon"
+                >
+                  <span>Request to collaborate</span>
+                  <span aria-hidden="true">→</span>
+                </button>
+              </div>
+            )}
+
+            <IdeaComments
+              ideaId={selectedIdea.id}
+              currentUserId={user?.id}
+            />
+          </IdeaDetailModal>
+        )}
+
     </div>
   );
 }

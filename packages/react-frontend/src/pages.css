@@ -2605,3 +2605,45 @@
   font-size: 15px;
   font-weight: 700;
 }
+
+
+/* Request to collaborate button */
+.idea-collaboration-section {
+  width: 100%;
+  padding: 14px 0;
+  margin: 16px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.idea-collaboration-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.idea-collaboration-button:hover:not(:disabled) {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.idea-collaboration-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.idea-collaboration-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
