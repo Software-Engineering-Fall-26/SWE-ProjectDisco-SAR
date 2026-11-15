@@ -8,13 +8,10 @@ import Profile from "./Profile";
 import PublicProfile from "./PublicProfile";
 import ResetPassword from "./ResetPassword";
 import Messages from "./Messages";
-<<<<<<< HEAD
-=======
 import { useEffect, useState } from "react";
 import { supabase } from "./supabaseClient";
 import { fetchUnreadCounts } from "./services/messagesAPI";
 
->>>>>>> f5b1ea231ccddfc5dbf9260fa0cb7b41461f667d
 
 function AppLayout() {
   const { user } = useAuth();
@@ -187,12 +184,6 @@ function AppLayout() {
         </div>
 
         <NavLink to="/messages" className="sidebar-link">
-<<<<<<< HEAD
-          Messages
-        </NavLink>
-
-        <NavLink to="/profile" className="sidebar-link account-link">
-=======
           <span>Messages</span>
 
           {hasUnreadMessages && (
@@ -207,7 +198,6 @@ function AppLayout() {
           to="/profile"
           className="sidebar-link account-link"
         >
->>>>>>> f5b1ea231ccddfc5dbf9260fa0cb7b41461f667d
           Account
         </NavLink>
       </nav>
