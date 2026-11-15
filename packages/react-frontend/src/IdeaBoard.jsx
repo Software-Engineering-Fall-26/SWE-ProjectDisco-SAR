@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
 import { useAuth } from "./useAuth";
+import IdeaComments from "./components/IdeaComments";
+import IdeaDetailModal from "./components/IdeaDetailModal";
 import { getPublicIdeas } from "./services/ideasAPi";
 
 const BOARD_FILTERS = [
@@ -56,6 +59,18 @@ function IdeaBoard() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [filterId, setFilterId] = useState("all");
+  const [selectedIdea, setSelectedIdea] = useState(null);
+
+  function handleIdeaKeyDown(event, idea) {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      setSelectedIdea(idea);
+    }
+  }
 
   useEffect(() => {
     async function loadPublicIdeas() {
@@ -152,7 +167,14 @@ function IdeaBoard() {
           </p>
           <div className="board-list">
             {visibleIdeas.map((idea) => (
-              <article key={idea.id} className="board-card">
+              <article
+                key={idea.id}
+                className="board-card board-card-clickable"
+                role="button"
+                tabIndex={0}
+                onClick={() => setSelectedIdea(idea)}
+                onKeyDown={(event) => handleIdeaKeyDown(event, idea)}
+              >
                 <div className="board-card-top">
                   <h2>{idea.title}</h2>
                   {idea.user_id === user?.id && (
@@ -164,7 +186,13 @@ function IdeaBoard() {
                   <span className="looking-for-pill">
                     Looking for {idea.looking_for || "collaborators"}
                   </span>
-                  <span>{authorLabel(idea, user?.id)}</span>
+                  <Link
+                    className="board-author-link"
+                    to={`/members/${idea.user_id}`}
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    {authorLabel(idea, user?.id)}
+                  </Link>
                   <span>{formatDate(idea.created_at)}</span>
                 </div>
 
@@ -173,6 +201,18 @@ function IdeaBoard() {
             ))}
           </div>
         </>
+      )}
+
+      {selectedIdea && (
+        <IdeaDetailModal
+          idea={selectedIdea}
+          author={authorLabel(selectedIdea, user?.id)}
+          isOwner={selectedIdea.user_id === user?.id}
+          showVisibility={false}
+          onClose={() => setSelectedIdea(null)}
+        >
+          <IdeaComments ideaId={selectedIdea.id} currentUserId={user?.id} />
+        </IdeaDetailModal>
       )}
     </div>
   );
