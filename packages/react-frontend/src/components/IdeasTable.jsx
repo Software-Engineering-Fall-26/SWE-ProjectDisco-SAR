@@ -1,3 +1,17 @@
+import { reviewPublicIdea } from "../services/contentModeration";
+
+function visibilityBadge(idea) {
+  if (idea.is_public && !reviewPublicIdea(idea).allowed) {
+    return { tone: "flagged", label: "Flagged" };
+  }
+
+  if (idea.is_public) {
+    return { tone: "public", label: "Public" };
+  }
+
+  return { tone: "private", label: "Private" };
+}
+
 function IdeasTable({ ideas, onSelectIdea }) {
   if (ideas.length === 0) {
     return (
@@ -20,32 +34,30 @@ function IdeasTable({ ideas, onSelectIdea }) {
         </thead>
 
         <tbody>
-          {ideas.map((idea) => (
-            <tr key={idea.id}>
-              <td>
-                <button
-                  type="button"
-                  className="idea-preview-link"
-                  onClick={() => onSelectIdea(idea)}
-                >
-                  {idea.title}
-                </button>
-              </td>
-              <td>{idea.looking_for || "—"}</td>
-              <td>
-                <span
-                  className={
-                    idea.is_public
-                      ? "visibility-badge public"
-                      : "visibility-badge private"
-                  }
-                >
-                  {idea.is_public ? "Public" : "Private"}
-                </span>
-              </td>
-              <td className="idea-preview-description">{idea.description}</td>
-            </tr>
-          ))}
+          {ideas.map((idea) => {
+            const badge = visibilityBadge(idea);
+
+            return (
+              <tr key={idea.id}>
+                <td>
+                  <button
+                    type="button"
+                    className="idea-preview-link"
+                    onClick={() => onSelectIdea(idea)}
+                  >
+                    {idea.title}
+                  </button>
+                </td>
+                <td>{idea.looking_for || "—"}</td>
+                <td>
+                  <span className={`visibility-badge ${badge.tone}`}>
+                    {badge.label}
+                  </span>
+                </td>
+                <td className="idea-preview-description">{idea.description}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

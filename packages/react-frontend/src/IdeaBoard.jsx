@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "./useAuth";
 import IdeaComments from "./components/IdeaComments";
 import IdeaDetailModal from "./components/IdeaDetailModal";
+import ReportIdea from "./components/ReportIdea";
 import { getPublicIdeas } from "./services/ideasAPi";
 
 const BOARD_FILTERS = [
@@ -60,6 +61,8 @@ function IdeaBoard() {
   const [search, setSearch] = useState("");
   const [filterId, setFilterId] = useState("all");
   const [selectedIdea, setSelectedIdea] = useState(null);
+  const [reporting, setReporting] = useState(false);
+  const [notice, setNotice] = useState("");
 
   function handleIdeaKeyDown(event, idea) {
     if (event.target !== event.currentTarget) {
@@ -68,8 +71,20 @@ function IdeaBoard() {
 
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      setSelectedIdea(idea);
+      openIdea(idea);
     }
+  }
+
+  function openIdea(idea) {
+    setReporting(false);
+    setSelectedIdea(idea);
+  }
+
+  function handleReported(ideaId) {
+    setIdeas((current) => current.filter((idea) => idea.id !== ideaId));
+    setSelectedIdea(null);
+    setReporting(false);
+    setNotice("Reported. That idea is off the Idea Board.");
   }
 
   useEffect(() => {
@@ -114,10 +129,13 @@ function IdeaBoard() {
         <p className="page-intro">
           Public ideas from people on Disco. See what they are building and who
           they are looking for, from investors and co-founders to early users.
+          Report an idea that doesn't belong. It comes off the board, with
+          the reason you choose.
         </p>
       </header>
 
       {error && <p className="error-message">{error}</p>}
+      {notice && <p className="info-message">{notice}</p>}
 
       <div className="board-toolbar">
         <label className="board-search-label">
@@ -172,7 +190,7 @@ function IdeaBoard() {
                 className="board-card board-card-clickable"
                 role="button"
                 tabIndex={0}
-                onClick={() => setSelectedIdea(idea)}
+                onClick={() => openIdea(idea)}
                 onKeyDown={(event) => handleIdeaKeyDown(event, idea)}
               >
                 <div className="board-card-top">
@@ -209,8 +227,31 @@ function IdeaBoard() {
           author={authorLabel(selectedIdea, user?.id)}
           isOwner={selectedIdea.user_id === user?.id}
           showVisibility={false}
-          onClose={() => setSelectedIdea(null)}
+          onClose={() => {
+            setSelectedIdea(null);
+            setReporting(false);
+          }}
         >
+          {selectedIdea.user_id !== user?.id && !reporting && (
+            <div className="idea-modal-actions">
+              <button
+                type="button"
+                className="danger"
+                onClick={() => setReporting(true)}
+              >
+                Report
+              </button>
+            </div>
+          )}
+
+          {reporting && selectedIdea.user_id !== user?.id && (
+            <ReportIdea
+              ideaId={selectedIdea.id}
+              onCancel={() => setReporting(false)}
+              onReported={() => handleReported(selectedIdea.id)}
+            />
+          )}
+
           <IdeaComments ideaId={selectedIdea.id} currentUserId={user?.id} />
         </IdeaDetailModal>
       )}
