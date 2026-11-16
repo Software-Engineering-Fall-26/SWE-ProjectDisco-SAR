@@ -4,20 +4,16 @@ import { Link } from "react-router-dom";
 import { useAuth } from "./useAuth";
 import IdeaComments from "./components/IdeaComments";
 import IdeaDetailModal from "./components/IdeaDetailModal";
-<<<<<<< Updated upstream
-import { getPublicIdeas } from "./services/ideasAPi";
-import {
-  sendCollaborationRequest,
-  fetchMyCollaborationRequest,
-  alreadyHasConversation,
-} from "./services/collaborationAPI";
-=======
 import {
   getIdeaLikeSummaries,
   getPublicIdeas,
   setIdeaLike,
 } from "./services/ideasAPi";
->>>>>>> Stashed changes
+import {
+  sendCollaborationRequest,
+  fetchMyCollaborationRequest,
+  alreadyHasConversation,
+} from "./services/collaborationAPI";
 
 const BOARD_FILTERS = [
   { id: "all", label: "All" },
@@ -73,7 +69,6 @@ function IdeaBoard() {
   const [search, setSearch] = useState("");
   const [filterId, setFilterId] = useState("all");
   const [selectedIdea, setSelectedIdea] = useState(null);
-<<<<<<< Updated upstream
   const [sendingRequest, setSendingRequest] = useState(false);
   const [sentRequestIds, setSentRequestIds] = useState([]);
   const [collaborationError, setCollaborationError] = useState(""); 
@@ -81,10 +76,8 @@ function IdeaBoard() {
   const [requestStatusLoading, setRequestStatusLoading] = useState(false);
   const [alreadyCollaborating, setAlreadyCollaborating] = useState(false);
   const [checkingCollaboration, setCheckingCollaboration] = useState(false);
-=======
   const [likeSummaries, setLikeSummaries] = useState({});
   const [updatingLikeId, setUpdatingLikeId] = useState(null);
->>>>>>> Stashed changes
 
   function handleIdeaKeyDown(event, idea) {
     if (event.target !== event.currentTarget) {
@@ -385,79 +378,6 @@ function IdeaBoard() {
         </>
       )}
 
-<<<<<<< Updated upstream
-
-        {selectedIdea && (
-          <IdeaDetailModal
-            idea={selectedIdea}
-            author={authorLabel(selectedIdea, user?.id)}
-            isOwner={selectedIdea.user_id === user?.id}
-            showVisibility={false}
-            onClose={() => setSelectedIdea(null)}
-          >
-            
-        {user && selectedIdea.user_id !== user.id && (
-          <div className="idea-collaboration-section">
-            
-          {checkingCollaboration ? (
-            <span className="idea-collaboration-status">
-              Checking collaboration...
-            </span>
-          ) : alreadyCollaborating ? (
-            <span className="idea-collaboration-status">
-              ✓ Already collaborating
-            </span>
-          ) : (
-            <button
-              type="button"
-              className="idea-collaboration-button"
-              onClick={handleCollaborationRequest}
-              disabled={
-                sendingRequest ||
-                requestStatusLoading ||
-                requestStatus === "pending" ||
-                requestStatus === "accepted"
-              }
-            >
-              <span>
-                {sendingRequest
-                  ? "Sending request..."
-                  : requestStatusLoading
-                  ? "Checking request..."
-                  : requestStatus === "pending"
-                  ? "Request sent"
-                  : requestStatus === "accepted"
-                  ? "Request accepted"
-                  : "Request to collaborate"}
-              </span>
-
-              <span aria-hidden="true">
-                {requestStatus === "pending" ||
-                requestStatus === "accepted"
-                  ? "✓"
-                  : "→"}
-              </span>
-            </button>
-          )}
-
-
-            {collaborationError && (
-              <p className="error-message" role="alert">
-                {collaborationError}
-              </p>
-            )}
-          </div>
-        )}
-
-
-            <IdeaComments
-              ideaId={selectedIdea.id}
-              currentUserId={user?.id}
-            />
-          </IdeaDetailModal>
-        )}
-
-=======
       {selectedIdea && (
         <IdeaDetailModal
           idea={selectedIdea}
@@ -467,10 +387,57 @@ function IdeaBoard() {
           onClose={() => setSelectedIdea(null)}
           actions={renderLikeButton(selectedIdea)}
         >
+          {user && selectedIdea.user_id !== user.id && (
+            <div className="idea-collaboration-section">
+              {checkingCollaboration ? (
+                <span className="idea-collaboration-status">
+                  Checking collaboration...
+                </span>
+              ) : alreadyCollaborating ? (
+                <span className="idea-collaboration-status">
+                  ✓ Already collaborating
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  className="idea-collaboration-button"
+                  onClick={handleCollaborationRequest}
+                  disabled={
+                    sendingRequest ||
+                    requestStatusLoading ||
+                    requestStatus === "pending" ||
+                    requestStatus === "accepted"
+                  }
+                >
+                  <span>
+                    {sendingRequest
+                      ? "Sending request..."
+                      : requestStatusLoading
+                        ? "Checking request..."
+                        : requestStatus === "pending"
+                          ? "Request sent"
+                          : requestStatus === "accepted"
+                            ? "Request accepted"
+                            : "Request to collaborate"}
+                  </span>
+                  <span aria-hidden="true">
+                    {requestStatus === "pending" || requestStatus === "accepted"
+                      ? "✓"
+                      : "→"}
+                  </span>
+                </button>
+              )}
+
+              {collaborationError && (
+                <p className="error-message" role="alert">
+                  {collaborationError}
+                </p>
+              )}
+            </div>
+          )}
           <IdeaComments ideaId={selectedIdea.id} currentUserId={user?.id} />
         </IdeaDetailModal>
       )}
->>>>>>> Stashed changes
     </div>
   );
 }
