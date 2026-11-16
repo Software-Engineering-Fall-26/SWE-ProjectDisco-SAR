@@ -53,7 +53,8 @@ function AppLayout() {
         const { data: memberships, error } = await supabase
           .from("conversation_members")
           .select("conversation_id")
-          .eq("user_id", user.id);
+          .eq("user_id", user.id)
+          .is("deleted_at", null);
 
         if (error) throw error;
         if (!active) return;

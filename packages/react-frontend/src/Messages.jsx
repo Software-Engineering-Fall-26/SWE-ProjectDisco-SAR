@@ -77,6 +77,7 @@ function Messages() {
     const [error, setError] = useState("");
     const [unreadCounts, setUnreadCounts] = useState({});
     const [deletingConversation, setDeletingConversation] = useState(false);
+    const [conversationRefresh, setConversationRefresh] = useState(0);
 
     async function openCollaborationRequests() {
         setRequestsOpen(true);
@@ -262,6 +263,32 @@ function Messages() {
 
         return () => {
             cancelled = true;
+        };
+    }, [user?.id, conversationRefresh]);
+
+    useEffect(() => {
+        if (!user?.id) return;
+
+        const channel = supabase
+            .channel(`restored-conversations-${user.id}`)
+            .on(
+                "postgres_changes",
+                {
+                    event: "UPDATE",
+                    schema: "public",
+                    table: "conversation_members",
+                    filter: `user_id=eq.${user.id}`,
+                },
+                (payload) => {
+                    if (payload.new.deleted_at === null) {
+                        setConversationRefresh((current) => current + 1);
+                    }
+                },
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
         };
     }, [user?.id]);
 

@@ -9,7 +9,8 @@ export async function fetchConversations(userId) {
         await supabase
             .from("conversation_members")
             .select("conversation_id")
-            .eq("user_id", userId);
+            .eq("user_id", userId)
+            .is("deleted_at", null);
 
     if (membershipError) throw membershipError;
 
@@ -136,7 +137,8 @@ export async function fetchUnreadCounts(userId) {
         await supabase
             .from("conversation_members")
             .select("conversation_id, last_read_at, joined_at")
-            .eq("user_id", userId);
+            .eq("user_id", userId)
+            .is("deleted_at", null);
 
     if (memberError) throw memberError;
 
