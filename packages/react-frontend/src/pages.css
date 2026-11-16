@@ -1631,6 +1631,35 @@
   margin-top: 0;
 }
 
+.delete-account-confirmation {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid #d66a6a;
+  border-radius: 10px;
+  background: #fff4f4;
+}
+
+.delete-account-confirmation p {
+  margin: 0;
+  color: #7a1f1f;
+  line-height: 1.5;
+}
+
+.delete-account-confirmation label {
+  display: grid;
+  gap: 6px;
+  max-width: 320px;
+}
+
+.delete-confirmation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+
 .delete-account-section {
   max-width: none;
   margin-top: 28px;
@@ -2711,6 +2740,83 @@
 
 
 /* Collaboration Requests button */
+
+/* Collaboration request Accept / Deny buttons */
+
+.collaboration-request-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--line, #d8dce3);
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.collaboration-request-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.collaboration-request-details p {
+  margin: 6px 0;
+}
+
+.collaboration-request-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.collaboration-request-accept,
+.collaboration-request-deny {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 24px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.collaboration-request-accept {
+  border: 1px solid #bbf7d0;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.collaboration-request-accept:hover:not(:disabled) {
+  background: #dcfce7;
+}
+
+.collaboration-request-deny {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.collaboration-request-deny:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
+.collaboration-request-accept:disabled,
+.collaboration-request-deny:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.collaboration-request-accept:focus-visible,
+.collaboration-request-deny:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
 
 .collaboration-requests-toolbar {
   display: flex;
