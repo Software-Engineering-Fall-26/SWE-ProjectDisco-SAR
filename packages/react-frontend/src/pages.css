@@ -33,23 +33,34 @@
   letter-spacing: -0.03em;
 }
 
+
+
 .app-layout {
   display: flex;
   width: 100%;
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   background: var(--bg);
 }
+
+
+
 
 .sidebar {
   display: flex;
   flex-direction: column;
   gap: 28px;
   width: 232px;
-  min-height: 100vh;
+  min-height: 0;
+  height: 100%;
+  flex-shrink: 0;
   padding: 22px 14px 16px;
+  overflow: hidden;
   background: var(--sidebar);
   color: var(--sidebar-ink);
 }
+
 
 .sidebar-brand {
   display: flex;
@@ -109,10 +120,14 @@
   margin-top: auto;
 }
 
+
 .page-content {
   flex: 1;
   min-width: 0;
+  min-height: 0;
   padding: 40px 48px 72px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .page-header {
@@ -1616,14 +1631,6 @@
   margin-top: 0;
 }
 
-.delete-account-section {
-  max-width: none;
-  margin-top: 28px;
-  padding: 20px 22px;
-  border-color: color-mix(in srgb, var(--danger) 35%, var(--line));
-  box-shadow: none;
-}
-
 .delete-account-confirmation {
   display: grid;
   gap: 12px;
@@ -1650,6 +1657,15 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+
+.delete-account-section {
+  max-width: none;
+  margin-top: 28px;
+  padding: 20px 22px;
+  border-color: color-mix(in srgb, var(--danger) 35%, var(--line));
+  box-shadow: none;
 }
 
 .delete-account-section p {
@@ -1985,14 +2001,11 @@
   }
 
   .sidebar {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    width: 100%;
-    min-height: auto;
-    gap: 8px 10px;
-    padding: 14px 14px 12px;
+    height: auto;
+    flex-shrink: 0;
+    overflow: visible;
   }
+
 
   .sidebar-brand {
     width: 100%;
@@ -2728,70 +2741,6 @@
 
 /* Collaboration Requests button */
 
-.collaboration-requests-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  margin: 20px 0 24px;
-}
-
-.collaboration-requests-trigger {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-
-  padding: 12px 20px;
-  min-height: 44px;
-
-  border: 1px solid #d9e2f0;
-  border-radius: 12px;
-
-  background: #eef4ff;
-  color: #2456a6;
-
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.4;
-  letter-spacing: 0.01em;
-
-  cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
-}
-
-.collaboration-requests-trigger:hover {
-  background: #e0ecff;
-  border-color: #aac5f0;
-  box-shadow: 0 4px 12px rgba(36, 86, 166, 0.1);
-  transform: translateY(-1px);
-}
-
-.collaboration-requests-trigger:active {
-  transform: translateY(0);
-  box-shadow: none;
-}
-
-.collaboration-requests-trigger:focus-visible {
-  outline: 2px solid #477ed2;
-  outline-offset: 3px;
-}
-
-@media (max-width: 600px) {
-  .collaboration-requests-toolbar {
-    margin: 16px 0;
-  }
-
-  .collaboration-requests-trigger {
-    width: 100%;
-  }
-}
-
-
 /* Collaboration request Accept / Deny buttons */
 
 .collaboration-request-card {
@@ -2868,3 +2817,67 @@
   outline: 2px solid currentColor;
   outline-offset: 3px;
 }
+
+.collaboration-requests-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin: 20px 0 24px;
+}
+
+.collaboration-requests-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  padding: 12px 20px;
+  min-height: 44px;
+
+  border: 1px solid #d9e2f0;
+  border-radius: 12px;
+
+  background: #eef4ff;
+  color: #2456a6;
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.collaboration-requests-trigger:hover {
+  background: #e0ecff;
+  border-color: #aac5f0;
+  box-shadow: 0 4px 12px rgba(36, 86, 166, 0.1);
+  transform: translateY(-1px);
+}
+
+.collaboration-requests-trigger:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.collaboration-requests-trigger:focus-visible {
+  outline: 2px solid #477ed2;
+  outline-offset: 3px;
+}
+
+@media (max-width: 600px) {
+  .collaboration-requests-toolbar {
+    margin: 16px 0;
+  }
+
+  .collaboration-requests-trigger {
+    width: 100%;
+  }
+}
+
