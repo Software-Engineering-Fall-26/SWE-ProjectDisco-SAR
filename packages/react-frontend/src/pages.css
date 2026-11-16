@@ -2177,6 +2177,7 @@
   color: var(--accent-ink);
   font-size: 17px;
   font-weight: 700;
+  overflow: hidden;
 }
 
 .messages-page .conversation-info {

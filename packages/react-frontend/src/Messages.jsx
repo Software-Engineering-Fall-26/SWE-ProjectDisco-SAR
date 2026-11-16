@@ -1,6 +1,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "./useAuth";
+import { supabase } from "./supabaseClient";
 import "./pages.css";
 import {
     fetchConversations,
@@ -15,6 +16,45 @@ import {
   fetchIncomingCollaborationRequests,
   respondToCollaborationRequest,
 } from "./services/collaborationAPI";
+
+
+function ConversationAvatar({ name, avatarPath }) {
+    const [imageFailed, setImageFailed] = useState(false);
+
+    const avatarUrl = avatarPath
+        ? avatarPath.startsWith("http")
+            ? avatarPath
+            : supabase.storage
+                .from("avatars")
+                .getPublicUrl(avatarPath).data.publicUrl
+        : null;
+
+    useEffect(() => {
+        setImageFailed(false);
+    }, [avatarPath]);
+
+    return (
+        <div className="conversation-avatar">
+            {avatarUrl && !imageFailed ? (
+                <img
+                    src={avatarUrl}
+                    alt={`${name}'s profile`}
+                    onError={() => setImageFailed(true)}
+                    style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        borderRadius: "50%",
+                        display: "block",
+                    }}
+                />
+            ) : (
+                name.charAt(0).toUpperCase()
+            )}
+        </div>
+    );
+}
+
 
 function Messages() {
     const { user } = useAuth();
@@ -123,6 +163,15 @@ function Messages() {
             (member) => member.user_id !== user?.id
         )?.profile ?? null;
     }
+
+    useEffect(() => {
+        if (conversations.length > 0) {
+            console.log(
+                "OTHER USER PROFILE:",
+                getOtherUser(conversations[0])
+            );
+        }
+    }, [conversations]);
 
     function getName(conversation) {
         return getOtherUser(conversation)?.display_name ||
@@ -459,9 +508,10 @@ function Messages() {
                                             setNewMessage("");
                                         }}
                                     >
-                                        <div className="conversation-avatar">
-                                            {name.charAt(0).toUpperCase()}
-                                        </div>
+                                        <ConversationAvatar
+                                            name={name}
+                                            avatarPath={getOtherUser(conversation)?.avatar_path}
+                                        />
 
                                         <div className="conversation-info">
                                             <strong>{name}</strong>
@@ -499,11 +549,10 @@ function Messages() {
                     ) : (
                         <>
                             <header className="chat-header">
-                                <div className="conversation-avatar">
-                                    {getName(selectedConversation)
-                                        .charAt(0)
-                                        .toUpperCase()}
-                                </div>
+                                <ConversationAvatar
+                                    name={getName(selectedConversation)}
+                                    avatarPath={getOtherUser(selectedConversation)?.avatar_path}
+                                />
 
                                 <div>
                                     <h2>{getName(selectedConversation)}</h2>
