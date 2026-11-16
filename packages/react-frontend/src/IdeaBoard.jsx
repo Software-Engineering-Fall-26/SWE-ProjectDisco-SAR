@@ -5,7 +5,16 @@ import { useAuth } from "./useAuth";
 import IdeaComments from "./components/IdeaComments";
 import IdeaDetailModal from "./components/IdeaDetailModal";
 import ReportIdea from "./components/ReportIdea";
-import { getPublicIdeas } from "./services/ideasAPi";
+import {
+  getIdeaLikeSummaries,
+  getPublicIdeas,
+  setIdeaLike,
+} from "./services/ideasAPi";
+import {
+  sendCollaborationRequest,
+  fetchMyCollaborationRequest,
+  alreadyHasConversation,
+} from "./services/collaborationAPI";
 
 const BOARD_FILTERS = [
   { id: "all", label: "All" },
@@ -63,6 +72,14 @@ function IdeaBoard() {
   const [selectedIdea, setSelectedIdea] = useState(null);
   const [reporting, setReporting] = useState(false);
   const [notice, setNotice] = useState("");
+  const [sendingRequest, setSendingRequest] = useState(false);
+  const [collaborationError, setCollaborationError] = useState("");
+  const [requestStatus, setRequestStatus] = useState(null);
+  const [requestStatusLoading, setRequestStatusLoading] = useState(false);
+  const [alreadyCollaborating, setAlreadyCollaborating] = useState(false);
+  const [checkingCollaboration, setCheckingCollaboration] = useState(false);
+  const [likeSummaries, setLikeSummaries] = useState({});
+  const [updatingLikeId, setUpdatingLikeId] = useState(null);
 
   function handleIdeaKeyDown(event, idea) {
     if (event.target !== event.currentTarget) {
@@ -92,6 +109,9 @@ function IdeaBoard() {
       try {
         const loadedIdeas = await getPublicIdeas();
         setIdeas(loadedIdeas);
+        setLikeSummaries(
+          await getIdeaLikeSummaries(loadedIdeas.map((idea) => idea.id)),
+        );
       } catch (loadError) {
         setError(loadError.message);
       } finally {
@@ -101,6 +121,62 @@ function IdeaBoard() {
 
     loadPublicIdeas();
   }, []);
+
+  async function handleLike(event, idea) {
+    event?.stopPropagation();
+
+    const currentSummary = likeSummaries[idea.id] ?? {
+      count: 0,
+      likedByCurrentUser: false,
+    };
+    const shouldLike = !currentSummary.likedByCurrentUser;
+
+    setUpdatingLikeId(idea.id);
+    setLikeSummaries((current) => ({
+      ...current,
+      [idea.id]: {
+        count: Math.max(0, currentSummary.count + (shouldLike ? 1 : -1)),
+        likedByCurrentUser: shouldLike,
+      },
+    }));
+
+    try {
+      await setIdeaLike(idea.id, shouldLike);
+    } catch (likeError) {
+      setLikeSummaries((current) => ({
+        ...current,
+        [idea.id]: currentSummary,
+      }));
+      setError(likeError.message);
+    } finally {
+      setUpdatingLikeId(null);
+    }
+  }
+
+  function renderLikeButton(idea) {
+    const summary = likeSummaries[idea.id] ?? {
+      count: 0,
+      likedByCurrentUser: false,
+    };
+    const isUpdating = updatingLikeId === idea.id;
+
+    return (
+      <button
+        type="button"
+        className={
+          summary.likedByCurrentUser
+            ? "idea-like-button liked"
+            : "idea-like-button"
+        }
+        onClick={(event) => handleLike(event, idea)}
+        disabled={isUpdating}
+        aria-pressed={summary.likedByCurrentUser}
+      >
+        <span aria-hidden="true">♥</span>
+        {summary.count} {summary.count === 1 ? "like" : "likes"}
+      </button>
+    );
+  }
 
   const visibleIdeas = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -121,6 +197,98 @@ function IdeaBoard() {
     });
   }, [ideas, search, filterId]);
 
+  async function handleCollaborationRequest() {
+    if (!selectedIdea || sendingRequest) {
+      return;
+    }
+
+    setSendingRequest(true);
+    setCollaborationError("");
+
+    try {
+      await sendCollaborationRequest(selectedIdea);
+      setRequestStatus("pending");
+    } catch (requestError) {
+      setCollaborationError(requestError.message);
+    } finally {
+      setSendingRequest(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!selectedIdea?.id || !user?.id) {
+      setRequestStatus(null);
+      return;
+    }
+
+    if (selectedIdea.user_id === user.id) {
+      setRequestStatus(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadRequestStatus() {
+      setRequestStatusLoading(true);
+      setRequestStatus(null);
+
+      try {
+        const request = await fetchMyCollaborationRequest(selectedIdea.id);
+
+        if (!cancelled) {
+          setRequestStatus(request?.status ?? null);
+        }
+      } catch (statusError) {
+        console.error("Failed to load request status:", statusError);
+      } finally {
+        if (!cancelled) {
+          setRequestStatusLoading(false);
+        }
+      }
+    }
+
+    loadRequestStatus();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedIdea?.id, selectedIdea?.user_id, user?.id]);
+
+  useEffect(() => {
+    if (!selectedIdea?.id || !user?.id || selectedIdea.user_id === user.id) {
+      setAlreadyCollaborating(false);
+      setCheckingCollaboration(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function checkConversation() {
+      setAlreadyCollaborating(false);
+      setCheckingCollaboration(true);
+
+      try {
+        const exists = await alreadyHasConversation(selectedIdea.user_id);
+
+        if (!cancelled) {
+          setAlreadyCollaborating(exists);
+        }
+      } catch (checkError) {
+        console.error("Could not check collaboration:", checkError);
+      } finally {
+        if (!cancelled) {
+          setCheckingCollaboration(false);
+        }
+      }
+    }
+
+    checkConversation();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedIdea?.id, selectedIdea?.user_id, user?.id]);
+
   return (
     <div className="idea-board">
       <header className="page-header">
@@ -129,8 +297,8 @@ function IdeaBoard() {
         <p className="page-intro">
           Public ideas from people on Disco. See what they are building and who
           they are looking for, from investors and co-founders to early users.
-          Report an idea that doesn't belong. It comes off the board, with
-          the reason you choose.
+          Report an idea that doesn't belong. It comes off the board, with the
+          reason you choose.
         </p>
       </header>
 
@@ -215,6 +383,9 @@ function IdeaBoard() {
                 </div>
 
                 <p className="board-description">{idea.description}</p>
+                <div className="board-card-actions">
+                  {renderLikeButton(idea)}
+                </div>
               </article>
             ))}
           </div>
@@ -231,6 +402,7 @@ function IdeaBoard() {
             setSelectedIdea(null);
             setReporting(false);
           }}
+          actions={renderLikeButton(selectedIdea)}
         >
           {selectedIdea.user_id !== user?.id && !reporting && (
             <div className="idea-modal-actions">
@@ -252,6 +424,55 @@ function IdeaBoard() {
             />
           )}
 
+          {user && selectedIdea.user_id !== user.id && (
+            <div className="idea-collaboration-section">
+              {checkingCollaboration ? (
+                <span className="idea-collaboration-status">
+                  Checking collaboration...
+                </span>
+              ) : alreadyCollaborating ? (
+                <span className="idea-collaboration-status">
+                  ✓ Already collaborating
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  className="idea-collaboration-button"
+                  onClick={handleCollaborationRequest}
+                  disabled={
+                    sendingRequest ||
+                    requestStatusLoading ||
+                    requestStatus === "pending" ||
+                    requestStatus === "accepted"
+                  }
+                >
+                  <span>
+                    {sendingRequest
+                      ? "Sending request..."
+                      : requestStatusLoading
+                        ? "Checking request..."
+                        : requestStatus === "pending"
+                          ? "Request sent"
+                          : requestStatus === "accepted"
+                            ? "Request accepted"
+                            : "Request to collaborate"}
+                  </span>
+                  <span aria-hidden="true">
+                    {requestStatus === "pending" ||
+                    requestStatus === "accepted"
+                      ? "✓"
+                      : "→"}
+                  </span>
+                </button>
+              )}
+
+              {collaborationError && (
+                <p className="error-message" role="alert">
+                  {collaborationError}
+                </p>
+              )}
+            </div>
+          )}
           <IdeaComments ideaId={selectedIdea.id} currentUserId={user?.id} />
         </IdeaDetailModal>
       )}

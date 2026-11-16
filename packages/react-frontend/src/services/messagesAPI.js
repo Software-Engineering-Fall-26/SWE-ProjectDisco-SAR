@@ -49,7 +49,7 @@ export async function fetchConversations(userId) {
     if (userIds.length > 0) {
         const { data, error: profilesError } = await supabase
             .from("profiles")
-            .select("id, display_name")
+            .select("id, display_name, avatar_path")
             .in("id", userIds);
 
 
@@ -175,6 +175,17 @@ export async function fetchUnreadCounts(userId) {
 export async function markConversationRead(conversationId) {
     const { error } = await supabase.rpc(
         "mark_conversation_read",
+        {
+            p_conversation_id: conversationId,
+        }
+    );
+
+    if (error) throw error;
+}
+
+export async function deleteConversationForCurrentUser(conversationId) {
+    const { error } = await supabase.rpc(
+        "delete_conversation_for_current_user",
         {
             p_conversation_id: conversationId,
         }

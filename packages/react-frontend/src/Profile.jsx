@@ -11,6 +11,7 @@ import {
 } from "./services/profileApi";
 
 import ConnectedAccounts from "./ConnectedAccounts";
+import { deleteCurrentAccount } from "./services/accountApi";
 
 const PRESET_TOPICS = [
   "Technology",
@@ -38,6 +39,9 @@ function Profile() {
   const [nightModePreview, setNightModePreview] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   useEffect(() => {
     if (!nightModePreview) {
@@ -254,10 +258,24 @@ function Profile() {
     }
   }
 
-  function handleDeleteAccount() {
-    setError(
-      "Account deletion is not enabled yet. It must be implemented with a protected server-side function.",
-    );
+  async function handleDeleteAccount(event) {
+    event.preventDefault();
+
+    if (deleteConfirmation !== "DELETE") {
+      setError('Type DELETE to confirm account deletion.');
+      return;
+    }
+
+    setDeletingAccount(true);
+    setError("");
+
+    try {
+      await deleteCurrentAccount();
+      navigate("/login", { replace: true });
+    } catch (deleteError) {
+      setError(deleteError.message);
+      setDeletingAccount(false);
+    }
   }
 
   if (loading) {
@@ -531,10 +549,53 @@ function Profile() {
         <button
           type="button"
           className="delete-account-button"
-          onClick={handleDeleteAccount}
+          onClick={() => {
+            setShowDeleteConfirmation(true);
+            setError("");
+          }}
         >
           Delete account
         </button>
+
+        {showDeleteConfirmation && (
+          <form className="delete-account-confirmation" onSubmit={handleDeleteAccount}>
+            <p>
+              This permanently deletes your account, profile, ideas, comments,
+              messages, LinkedIn connection, and profile photo. This cannot be undone.
+            </p>
+            <label>
+              Type <strong>DELETE</strong> to confirm
+              <input
+                type="text"
+                value={deleteConfirmation}
+                onChange={(event) => setDeleteConfirmation(event.target.value)}
+                autoComplete="off"
+                disabled={deletingAccount}
+              />
+            </label>
+            <div className="delete-confirmation-actions">
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => {
+                  setShowDeleteConfirmation(false);
+                  setDeleteConfirmation("");
+                  setError("");
+                }}
+                disabled={deletingAccount}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="delete-account-button"
+                disabled={deletingAccount || deleteConfirmation !== "DELETE"}
+              >
+                {deletingAccount ? "Deleting account..." : "Permanently delete account"}
+              </button>
+            </div>
+          </form>
+        )}
       </section>
     </div>
   );
