@@ -4,7 +4,11 @@ import { Link } from "react-router-dom";
 import { useAuth } from "./useAuth";
 import IdeaComments from "./components/IdeaComments";
 import IdeaDetailModal from "./components/IdeaDetailModal";
-import { getPublicIdeas } from "./services/ideasAPi";
+import {
+  getIdeaLikeSummaries,
+  getPublicIdeas,
+  setIdeaLike,
+} from "./services/ideasAPi";
 import {
   sendCollaborationRequest,
   fetchMyCollaborationRequest,
@@ -72,6 +76,8 @@ function IdeaBoard() {
   const [requestStatusLoading, setRequestStatusLoading] = useState(false);
   const [alreadyCollaborating, setAlreadyCollaborating] = useState(false);
   const [checkingCollaboration, setCheckingCollaboration] = useState(false);
+  const [likeSummaries, setLikeSummaries] = useState({});
+  const [updatingLikeId, setUpdatingLikeId] = useState(null);
 
   function handleIdeaKeyDown(event, idea) {
     if (event.target !== event.currentTarget) {
@@ -89,6 +95,9 @@ function IdeaBoard() {
       try {
         const loadedIdeas = await getPublicIdeas();
         setIdeas(loadedIdeas);
+        setLikeSummaries(
+          await getIdeaLikeSummaries(loadedIdeas.map((idea) => idea.id)),
+        );
       } catch (loadError) {
         setError(loadError.message);
       } finally {
@@ -98,6 +107,58 @@ function IdeaBoard() {
 
     loadPublicIdeas();
   }, []);
+
+  async function handleLike(event, idea) {
+    event?.stopPropagation();
+
+    const currentSummary = likeSummaries[idea.id] ?? {
+      count: 0,
+      likedByCurrentUser: false,
+    };
+    const shouldLike = !currentSummary.likedByCurrentUser;
+
+    setUpdatingLikeId(idea.id);
+    setLikeSummaries((current) => ({
+      ...current,
+      [idea.id]: {
+        count: Math.max(0, currentSummary.count + (shouldLike ? 1 : -1)),
+        likedByCurrentUser: shouldLike,
+      },
+    }));
+
+    try {
+      await setIdeaLike(idea.id, shouldLike);
+    } catch (likeError) {
+      setLikeSummaries((current) => ({
+        ...current,
+        [idea.id]: currentSummary,
+      }));
+      setError(likeError.message);
+    } finally {
+      setUpdatingLikeId(null);
+    }
+  }
+
+  function renderLikeButton(idea) {
+    const summary = likeSummaries[idea.id] ?? {
+      count: 0,
+      likedByCurrentUser: false,
+    };
+    const isUpdating = updatingLikeId === idea.id;
+
+    return (
+      <button
+        type="button"
+        className={summary.likedByCurrentUser ? "idea-like-button liked" : "idea-like-button"}
+        onClick={(event) => handleLike(event, idea)}
+        disabled={isUpdating}
+        aria-pressed={summary.likedByCurrentUser}
+      >
+        <span aria-hidden="true">♥</span>
+        {summary.count} {summary.count === 1 ? "like" : "likes"}
+      </button>
+    );
+  }
 
   const visibleIdeas = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -310,83 +371,73 @@ function IdeaBoard() {
                 </div>
 
                 <p className="board-description">{idea.description}</p>
+                <div className="board-card-actions">{renderLikeButton(idea)}</div>
               </article>
             ))}
           </div>
         </>
       )}
 
+      {selectedIdea && (
+        <IdeaDetailModal
+          idea={selectedIdea}
+          author={authorLabel(selectedIdea, user?.id)}
+          isOwner={selectedIdea.user_id === user?.id}
+          showVisibility={false}
+          onClose={() => setSelectedIdea(null)}
+          actions={renderLikeButton(selectedIdea)}
+        >
+          {user && selectedIdea.user_id !== user.id && (
+            <div className="idea-collaboration-section">
+              {checkingCollaboration ? (
+                <span className="idea-collaboration-status">
+                  Checking collaboration...
+                </span>
+              ) : alreadyCollaborating ? (
+                <span className="idea-collaboration-status">
+                  ✓ Already collaborating
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  className="idea-collaboration-button"
+                  onClick={handleCollaborationRequest}
+                  disabled={
+                    sendingRequest ||
+                    requestStatusLoading ||
+                    requestStatus === "pending" ||
+                    requestStatus === "accepted"
+                  }
+                >
+                  <span>
+                    {sendingRequest
+                      ? "Sending request..."
+                      : requestStatusLoading
+                        ? "Checking request..."
+                        : requestStatus === "pending"
+                          ? "Request sent"
+                          : requestStatus === "accepted"
+                            ? "Request accepted"
+                            : "Request to collaborate"}
+                  </span>
+                  <span aria-hidden="true">
+                    {requestStatus === "pending" || requestStatus === "accepted"
+                      ? "✓"
+                      : "→"}
+                  </span>
+                </button>
+              )}
 
-        {selectedIdea && (
-          <IdeaDetailModal
-            idea={selectedIdea}
-            author={authorLabel(selectedIdea, user?.id)}
-            isOwner={selectedIdea.user_id === user?.id}
-            showVisibility={false}
-            onClose={() => setSelectedIdea(null)}
-          >
-            
-        {user && selectedIdea.user_id !== user.id && (
-          <div className="idea-collaboration-section">
-            
-          {checkingCollaboration ? (
-            <span className="idea-collaboration-status">
-              Checking collaboration...
-            </span>
-          ) : alreadyCollaborating ? (
-            <span className="idea-collaboration-status">
-              ✓ Already collaborating
-            </span>
-          ) : (
-            <button
-              type="button"
-              className="idea-collaboration-button"
-              onClick={handleCollaborationRequest}
-              disabled={
-                sendingRequest ||
-                requestStatusLoading ||
-                requestStatus === "pending" ||
-                requestStatus === "accepted"
-              }
-            >
-              <span>
-                {sendingRequest
-                  ? "Sending request..."
-                  : requestStatusLoading
-                  ? "Checking request..."
-                  : requestStatus === "pending"
-                  ? "Request sent"
-                  : requestStatus === "accepted"
-                  ? "Request accepted"
-                  : "Request to collaborate"}
-              </span>
-
-              <span aria-hidden="true">
-                {requestStatus === "pending" ||
-                requestStatus === "accepted"
-                  ? "✓"
-                  : "→"}
-              </span>
-            </button>
+              {collaborationError && (
+                <p className="error-message" role="alert">
+                  {collaborationError}
+                </p>
+              )}
+            </div>
           )}
-
-
-            {collaborationError && (
-              <p className="error-message" role="alert">
-                {collaborationError}
-              </p>
-            )}
-          </div>
-        )}
-
-
-            <IdeaComments
-              ideaId={selectedIdea.id}
-              currentUserId={user?.id}
-            />
-          </IdeaDetailModal>
-        )}
-
+          <IdeaComments ideaId={selectedIdea.id} currentUserId={user?.id} />
+        </IdeaDetailModal>
+      )}
     </div>
   );
 }

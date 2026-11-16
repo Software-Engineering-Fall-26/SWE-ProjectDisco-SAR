@@ -186,6 +186,38 @@
   letter-spacing: -0.02em;
 }
 
+.board-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+.idea-like-button {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 7px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.idea-like-button:hover,
+.idea-like-button.liked {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+.idea-like-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 .form-heading p {
   margin: 4px 0 0;
   color: var(--muted);
