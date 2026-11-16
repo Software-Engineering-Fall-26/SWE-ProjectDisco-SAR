@@ -11,9 +11,19 @@ import {
     markConversationRead,
     subscribeToUnreadMessages,
 } from "./services/messagesAPI";
+import {
+  fetchIncomingCollaborationRequests,
+  respondToCollaborationRequest,
+} from "./services/collaborationAPI";
 
 function Messages() {
     const { user } = useAuth();
+
+    const [collaborationRequests, setCollaborationRequests] = useState([]);
+    const [requestsOpen, setRequestsOpen] = useState(false);
+    const [requestsLoading, setRequestsLoading] = useState(false);
+    const [requestsError, setRequestsError] = useState("");
+    const [processingRequestId, setProcessingRequestId] = useState(null);
 
     const [conversations, setConversations] = useState([]);
     const [messages, setMessages] = useState([]);
@@ -25,6 +35,64 @@ function Messages() {
     const [search, setSearch] = useState("");
     const [error, setError] = useState("");
     const [unreadCounts, setUnreadCounts] = useState({});
+
+    async function openCollaborationRequests() {
+        setRequestsOpen(true);
+        setRequestsLoading(true);
+        setRequestsError("");
+
+        try {
+            const requests = await fetchIncomingCollaborationRequests(user?.id);
+            setCollaborationRequests(requests);
+        } catch (err) {
+            setRequestsError(err.message);
+        } finally {
+            setRequestsLoading(false);
+        }
+
+    }
+
+    async function handleCollaborationDecision(requestId, accept) {
+        if (processingRequestId) return;
+
+        setProcessingRequestId(requestId);
+        setRequestsError("");
+
+        try {
+            const conversationId =
+            await respondToCollaborationRequest(requestId, accept);
+
+            // Remove the handled request from the pending list.
+            setCollaborationRequests((current) =>
+            current.filter((request) => request.id !== requestId)
+            );
+
+            if (accept && conversationId) {
+            // Refresh the conversation list after acceptance.
+            const updatedConversations =
+                await fetchConversations(user.id);
+
+            setConversations(updatedConversations);
+
+            // Open the accepted conversation.
+            const conversation = updatedConversations.find(
+                (item) => item.id === conversationId
+            );
+
+            if (conversation) {
+                setSelectedConversation(conversation);
+                setNewMessage("");
+            }
+
+            setRequestsOpen(false);
+            }
+        } catch (err) {
+            console.error("Collaboration request error:", err);
+            setRequestsError(err.message);
+        } finally {
+            setProcessingRequestId(null);
+        }
+    }
 
     const bottomRef = useRef(null);
     const requestRef = useRef(0);
@@ -329,6 +397,17 @@ function Messages() {
                 </div>
             </div>
 
+            <div className="collaboration-requests-toolbar">
+                <button
+                type="button"
+                className="collaboration-requests-trigger"
+                onClick={openCollaborationRequests}
+                >
+                <span aria-hidden="true">✉</span>
+                <span>Collaboration Requests</span>
+                </button>
+            </div>
+
             <div className="messages-layout">
                 <aside className="conversation-list">
                     <div className="conversation-list-header">
@@ -530,6 +609,105 @@ function Messages() {
                     )}
                 </section>
             </div>
+            
+            {requestsOpen && (
+                <div
+                      className="collaboration-requests-backdrop"
+                        style={{
+                            position: "fixed",
+                            inset: 0,
+                            zIndex: 99999,
+                            display: "grid",
+                            placeItems: "center",
+                            backgroundColor: "rgba(0, 0, 0, 0.65)",
+                            padding: "20px",
+                        }}
+                        onClick={() => setRequestsOpen(false)}
+                >
+                    <section
+                    className="collaboration-requests-modal"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="collaboration-requests-title"
+                    onClick={(event) => event.stopPropagation()}
+                    >
+                    <div className="collaboration-requests-header">
+                        <h2 id="collaboration-requests-title">
+                        Collaboration Requests
+                        </h2>
+                        <button
+                        type="button"
+                        onClick={() => setRequestsOpen(false)}
+                        aria-label="Close collaboration requests"
+                        >
+                        ×
+                        </button>
+                    </div>
+
+                    {requestsLoading ? (
+                        <p>Loading requests...</p>
+                    ) : requestsError ? (
+                        <p className="error-message" role="alert">
+                        {requestsError}
+                        </p>
+                    ) : collaborationRequests.length === 0 ? (
+                        <p>You have no pending collaboration requests.</p>
+                    ) : (
+                        
+                    <div className="collaboration-requests-list">
+                    {collaborationRequests.map((request) => (
+                        <div
+                        key={request.id}
+                        className="collaboration-request-card"
+                        >
+                        <div className="collaboration-request-details">
+                            <strong>{request.requesterName}</strong>
+
+                            <p>
+                            Wants to collaborate on{" "}
+                            <strong>{request.ideaTitle}</strong>
+                            </p>
+
+                            <span>Pending</span>
+                        </div>
+
+                        <div className="collaboration-request-actions">
+                            <button
+                            type="button"
+                            className="collaboration-request-accept"
+                            title="Accept request"
+                            aria-label={`Accept request from ${request.requesterName}`}
+                            disabled={processingRequestId !== null}
+                            onClick={() => {
+                                console.log("ACCEPT CLICKED", request.id);
+                                handleCollaborationDecision(request.id, true);
+                            }}
+                            >
+                            ✓
+                            </button>
+
+                            <button
+                            type="button"
+                            className="collaboration-request-deny"
+                            title="Deny request"
+                            aria-label={`Deny request from ${request.requesterName}`}
+                            disabled={processingRequestId !== null}
+                            onClick={() => {
+                                console.log("DENY CLICKED", request.id);
+                                handleCollaborationDecision(request.id, false);
+                            }}
+                            >
+                            ×
+                            </button>
+                        </div>
+                        </div>
+                    ))}
+                    </div>
+
+                    )}
+                    </section>
+                </div>
+                )}
 
             {!selectedConversation && error && (
                 <p className="error-message" role="alert">

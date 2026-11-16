@@ -5,6 +5,11 @@ import { useAuth } from "./useAuth";
 import IdeaComments from "./components/IdeaComments";
 import IdeaDetailModal from "./components/IdeaDetailModal";
 import { getPublicIdeas } from "./services/ideasAPi";
+import {
+  sendCollaborationRequest,
+  fetchMyCollaborationRequest,
+  alreadyHasConversation,
+} from "./services/collaborationAPI";
 
 const BOARD_FILTERS = [
   { id: "all", label: "All" },
@@ -60,6 +65,13 @@ function IdeaBoard() {
   const [search, setSearch] = useState("");
   const [filterId, setFilterId] = useState("all");
   const [selectedIdea, setSelectedIdea] = useState(null);
+  const [sendingRequest, setSendingRequest] = useState(false);
+  const [sentRequestIds, setSentRequestIds] = useState([]);
+  const [collaborationError, setCollaborationError] = useState(""); 
+  const [requestStatus, setRequestStatus] = useState(null);
+  const [requestStatusLoading, setRequestStatusLoading] = useState(false);
+  const [alreadyCollaborating, setAlreadyCollaborating] = useState(false);
+  const [checkingCollaboration, setCheckingCollaboration] = useState(false);
 
   function handleIdeaKeyDown(event, idea) {
     if (event.target !== event.currentTarget) {
@@ -105,6 +117,107 @@ function IdeaBoard() {
       return haystack.includes(query);
     });
   }, [ideas, search, filterId]);
+
+  async function handleCollaborationRequest() {
+    if (!selectedIdea || sendingRequest) {
+      return;
+    }
+
+    setSendingRequest(true);
+    setCollaborationError("");
+
+    try {
+      await sendCollaborationRequest(selectedIdea);
+      setRequestStatus("pending");
+
+    } catch (error) {
+      setCollaborationError(error.message);
+    } finally {
+      setSendingRequest(false);
+    }
+  }
+
+
+  useEffect(() => {
+    if (!selectedIdea?.id || !user?.id) {
+      setRequestStatus(null);
+      return;
+    }
+
+    if (selectedIdea.user_id === user.id) {
+      setRequestStatus(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadRequestStatus() {
+      setRequestStatusLoading(true);
+      setRequestStatus(null);
+
+      try {
+        const request = await fetchMyCollaborationRequest(
+          selectedIdea.id
+        );
+
+        if (!cancelled) {
+          setRequestStatus(request?.status ?? null);
+        }
+      } catch (error) {
+        console.error("Failed to load request status:", error);
+      } finally {
+        if (!cancelled) {
+          setRequestStatusLoading(false);
+        }
+      }
+    }
+
+    loadRequestStatus();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedIdea?.id, selectedIdea?.user_id, user?.id]);
+
+
+  useEffect(() => {
+    if (!selectedIdea?.id || !user?.id ||
+        selectedIdea.user_id === user.id) {
+      setAlreadyCollaborating(false);
+      setCheckingCollaboration(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function checkConversation() {
+      setAlreadyCollaborating(false);
+      setCheckingCollaboration(true);
+
+      try {
+        const exists = await alreadyHasConversation(
+          selectedIdea.user_id
+        );
+
+        if (!cancelled) {
+          setAlreadyCollaborating(exists);
+        }
+      } catch (err) {
+        console.error("Could not check collaboration:", err);
+      } finally {
+        if (!cancelled) {
+          setCheckingCollaboration(false);
+        }
+      }
+    }
+
+    checkConversation();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedIdea?.id, selectedIdea?.user_id, user?.id]);
+
 
   return (
     <div className="idea-board">
@@ -203,17 +316,77 @@ function IdeaBoard() {
         </>
       )}
 
-      {selectedIdea && (
-        <IdeaDetailModal
-          idea={selectedIdea}
-          author={authorLabel(selectedIdea, user?.id)}
-          isOwner={selectedIdea.user_id === user?.id}
-          showVisibility={false}
-          onClose={() => setSelectedIdea(null)}
-        >
-          <IdeaComments ideaId={selectedIdea.id} currentUserId={user?.id} />
-        </IdeaDetailModal>
-      )}
+
+        {selectedIdea && (
+          <IdeaDetailModal
+            idea={selectedIdea}
+            author={authorLabel(selectedIdea, user?.id)}
+            isOwner={selectedIdea.user_id === user?.id}
+            showVisibility={false}
+            onClose={() => setSelectedIdea(null)}
+          >
+            
+        {user && selectedIdea.user_id !== user.id && (
+          <div className="idea-collaboration-section">
+            
+          {checkingCollaboration ? (
+            <span className="idea-collaboration-status">
+              Checking collaboration...
+            </span>
+          ) : alreadyCollaborating ? (
+            <span className="idea-collaboration-status">
+              ✓ Already collaborating
+            </span>
+          ) : (
+            <button
+              type="button"
+              className="idea-collaboration-button"
+              onClick={handleCollaborationRequest}
+              disabled={
+                sendingRequest ||
+                requestStatusLoading ||
+                requestStatus === "pending" ||
+                requestStatus === "accepted"
+              }
+            >
+              <span>
+                {sendingRequest
+                  ? "Sending request..."
+                  : requestStatusLoading
+                  ? "Checking request..."
+                  : requestStatus === "pending"
+                  ? "Request sent"
+                  : requestStatus === "accepted"
+                  ? "Request accepted"
+                  : "Request to collaborate"}
+              </span>
+
+              <span aria-hidden="true">
+                {requestStatus === "pending" ||
+                requestStatus === "accepted"
+                  ? "✓"
+                  : "→"}
+              </span>
+            </button>
+          )}
+
+
+            {collaborationError && (
+              <p className="error-message" role="alert">
+                {collaborationError}
+              </p>
+            )}
+          </div>
+        )}
+
+
+            <IdeaComments
+              ideaId={selectedIdea.id}
+              currentUserId={user?.id}
+            />
+          </IdeaDetailModal>
+        )}
+
     </div>
   );
 }
