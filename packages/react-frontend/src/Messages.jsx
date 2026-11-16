@@ -11,6 +11,7 @@ import {
     fetchUnreadCounts,
     markConversationRead,
     subscribeToUnreadMessages,
+    deleteConversationForCurrentUser,
 } from "./services/messagesAPI";
 import {
   fetchIncomingCollaborationRequests,
@@ -75,6 +76,7 @@ function Messages() {
     const [search, setSearch] = useState("");
     const [error, setError] = useState("");
     const [unreadCounts, setUnreadCounts] = useState({});
+    const [deletingConversation, setDeletingConversation] = useState(false);
 
     async function openCollaborationRequests() {
         setRequestsOpen(true);
@@ -194,6 +196,40 @@ function Messages() {
             day: "numeric",
             year: "numeric",
         });
+    }
+
+    async function handleDeleteConversation() {
+        if (!selectedConversation || deletingConversation) return;
+
+        const name = getName(selectedConversation);
+        const confirmed = window.confirm(
+            `Remove this conversation with ${name} from your inbox? This does not delete it for the other participant.`,
+        );
+
+        if (!confirmed) return;
+
+        const conversationId = selectedConversation.id;
+        setDeletingConversation(true);
+        setError("");
+
+        try {
+            await deleteConversationForCurrentUser(conversationId);
+            setConversations((current) =>
+                current.filter((conversation) => conversation.id !== conversationId),
+            );
+            setSelectedConversation(null);
+            setMessages([]);
+            setUnreadCounts((current) => {
+                const { [conversationId]: _removed, ...remaining } = current;
+                return remaining;
+            });
+            window.dispatchEvent(new Event("disco:messages-read"));
+        } catch (err) {
+            console.error("Unable to delete conversation:", err);
+            setError(err.message || "Unable to delete the conversation.");
+        } finally {
+            setDeletingConversation(false);
+        }
     }
 
     useEffect(() => {
@@ -562,6 +598,17 @@ function Messages() {
                                             : "Direct conversation"}
                                     </span>
                                 </div>
+
+                                <button
+                                    type="button"
+                                    className="delete-conversation-button"
+                                    onClick={handleDeleteConversation}
+                                    disabled={deletingConversation}
+                                >
+                                    {deletingConversation
+                                        ? "Removing..."
+                                        : "Delete conversation"}
+                                </button>
                             </header>
 
                             <div className="chat-messages">
