@@ -1,7 +1,10 @@
 import { useRef, useState } from "react";
 
 import { enhanceIdea } from "../services/analyzeIdea";
-import { reviewPublicIdea } from "../services/contentModeration";
+import {
+  reviewPublicIdea,
+  reviewPublicIdeaForPublish,
+} from "../services/contentModeration";
 import IdeaEnhance from "./IdeaEnhance";
 import LookingForSelect from "./LookingForSelect";
 import PublishFlag from "./PublishFlag";
@@ -15,6 +18,8 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
   const [lookingFor, setLookingFor] = useState(ideaToEdit?.looking_for ?? "");
   const [isPublic, setIsPublic] = useState(Boolean(ideaToEdit?.is_public));
   const [formError, setFormError] = useState("");
+  const [aiFlags, setAiFlags] = useState([]);
+  const [checking, setChecking] = useState(false);
   const [saving, setSaving] = useState(false);
   const [enhancing, setEnhancing] = useState(false);
   const [enhanceError, setEnhanceError] = useState("");
@@ -58,12 +63,14 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
 
   function updateTitle(value) {
     setTitle(value);
+    setAiFlags([]);
     setPreviousDraft(null);
     markApplied(value, description);
   }
 
   function updateDescription(value) {
     setDescription(value);
+    setAiFlags([]);
     setPreviousDraft(null);
     markApplied(title, value);
   }
@@ -150,7 +157,20 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
       return;
     }
 
+    if (idea.isPublic) {
+      setChecking(true);
+      setFormError("");
+      const review = await reviewPublicIdeaForPublish(idea);
+      setChecking(false);
+
+      if (!review.allowed) {
+        setAiFlags(review.flags);
+        return;
+      }
+    }
+
     setFormError("");
+    setAiFlags([]);
     setSaving(true);
     requestRef.current += 1;
 
@@ -187,6 +207,7 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
 
   function chooseVisibility(nextPublic) {
     setIsPublic(nextPublic);
+    setAiFlags([]);
 
     if (!nextPublic) {
       return;
@@ -202,7 +223,8 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
   const showEnhance =
     !isPublic && (enhancing || enhanceError || enhancement);
   const publishReview = reviewForPublish(currentIdea());
-  const publishBlocked = !publishReview.allowed;
+  const visibleFlags = publishReview.allowed ? aiFlags : publishReview.flags;
+  const publishBlocked = visibleFlags.length > 0;
 
   return (
     <form className="idea-form" onSubmit={handleSubmit}>
@@ -235,7 +257,10 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
         <LookingForSelect
           id="looking-for"
           value={lookingFor}
-          onChange={setLookingFor}
+          onChange={(value) => {
+            setLookingFor(value);
+            setAiFlags([]);
+          }}
         />
       </div>
 
@@ -280,7 +305,7 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
           <span>
             Public
             <span className="field-hint">
-              On the Idea Board after a content check
+              A word list, then an AI check. Clinical terms are fine.
             </span>
           </span>
         </label>
@@ -304,7 +329,7 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
 
       {publishBlocked && (
         <div className="full-width">
-          <PublishFlag flags={publishReview.flags} />
+          <PublishFlag flags={visibleFlags} />
         </div>
       )}
 
@@ -315,7 +340,7 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
           type="button"
           className="btn-enhance"
           onClick={handleEnhance}
-          disabled={enhancing || saving}
+          disabled={enhancing || saving || checking}
         >
           {enhancing ? "Enhancing..." : "Enhance"}
         </button>
@@ -323,15 +348,17 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
         <button
           type="submit"
           className="btn-primary"
-          disabled={saving || publishBlocked}
+          disabled={saving || checking || publishBlocked}
         >
-          {saving
-            ? "Saving..."
-            : publishBlocked
-              ? "Can't publish"
-              : ideaToEdit
-                ? "Save changes"
-                : "Add idea"}
+          {checking
+            ? "Checking..."
+            : saving
+              ? "Saving..."
+              : publishBlocked
+                ? "Can't publish"
+                : ideaToEdit
+                  ? "Save changes"
+                  : "Add idea"}
         </button>
 
         {ideaToEdit && (

@@ -12,7 +12,10 @@ import {
   enhanceIdea,
   findInvestors,
 } from "./services/analyzeIdea";
-import { reviewPublicIdea } from "./services/contentModeration";
+import {
+  reviewPublicIdea,
+  reviewPublicIdeaForPublish,
+} from "./services/contentModeration";
 import {
   getIdeas,
   createIdea,
@@ -37,6 +40,7 @@ function Ideas() {
   const [findingInvestorsId, setFindingInvestorsId] = useState(null);
   const [applyingId, setApplyingId] = useState(null);
   const [publishFlags, setPublishFlags] = useState([]);
+  const [checkingPublish, setCheckingPublish] = useState(false);
 
   useEffect(() => {
     async function loadIdeas() {
@@ -382,6 +386,21 @@ function Ideas() {
     setError("");
 
     try {
+      if (idea.is_public) {
+        const review = await reviewPublicIdeaForPublish({
+          title: enhancement.enhancedTitle,
+          description: enhancement.enhancedDescription,
+          looking_for: idea.looking_for || "",
+          moderation_status: idea.moderation_status,
+          moderation_reason: idea.moderation_reason,
+        });
+
+        if (!review.allowed) {
+          setPublishFlags(review.flags);
+          return;
+        }
+      }
+
       const updatedIdea = await updateIdea(idea.id, {
         title: enhancement.enhancedTitle,
         description: enhancement.enhancedDescription,
@@ -409,11 +428,19 @@ function Ideas() {
     const nextPublic = !idea.is_public;
 
     if (nextPublic) {
-      const review = reviewPublicIdea(idea);
+      setCheckingPublish(true);
+      setError("");
+
+      let review;
+
+      try {
+        review = await reviewPublicIdeaForPublish(idea);
+      } finally {
+        setCheckingPublish(false);
+      }
 
       if (!review.allowed) {
         setPublishFlags(review.flags);
-        setError("");
         return;
       }
 
@@ -553,8 +580,13 @@ function Ideas() {
             <button
               type="button"
               onClick={() => handleToggleVisibility(selectedIdea)}
+              disabled={checkingPublish}
             >
-              {selectedIdea.is_public ? "Make private" : "Make public"}
+              {checkingPublish
+                ? "Checking..."
+                : selectedIdea.is_public
+                  ? "Make private"
+                  : "Make public"}
             </button>
             <button
               type="button"

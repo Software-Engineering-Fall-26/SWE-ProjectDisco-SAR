@@ -1,3 +1,5 @@
+import { screenIdea } from "./analyzeIdea";
+
 const REPORT_REASONS = [
   { id: "hate", label: "Hate speech" },
   { id: "harassment", label: "Harassment or threats" },
@@ -227,6 +229,57 @@ export function formatPublishError(flags) {
     .join(" ");
 
   return `This idea can't be public. ${details}`;
+}
+
+const AI_CATEGORIES = new Set([
+  "Hate speech",
+  "Harassment",
+  "Harassment or threats",
+  "Sexual content",
+  "Violence",
+  "Illegal activity",
+  "Spam or scam",
+  "Profanity",
+]);
+
+export async function reviewPublicIdeaForPublish(idea) {
+  const localReview = reviewPublicIdea(idea);
+
+  if (!localReview.allowed) {
+    return localReview;
+  }
+
+  try {
+    const result = await screenIdea(idea);
+
+    if (result?.allowed) {
+      return localReview;
+    }
+
+    const category = AI_CATEGORIES.has(result?.category)
+      ? result.category
+      : "Review";
+    const reason =
+      String(result?.reason || "").trim() ||
+      "This isn't allowed on the public Idea Board.";
+
+    return {
+      allowed: false,
+      flags: [{ category, reason }],
+    };
+  } catch (error) {
+    return {
+      allowed: false,
+      flags: [
+        {
+          category: "Review",
+          reason:
+            error?.message ||
+            "The second check couldn't finish. Try publishing again.",
+        },
+      ],
+    };
+  }
 }
 
 export function assertCanPublish(idea) {

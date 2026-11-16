@@ -2,6 +2,7 @@ import {
   handleAnalyzeRequest,
   handleEnhanceRequest,
   handleInvestorsRequest,
+  handleScreenRequest,
 } from "./handleAnalyzeRequest.js";
 import { AnalysisError } from "./groq.js";
 
@@ -53,6 +54,7 @@ const ideaRoutes = {
   "/api/analyze-idea": handleAnalyzeRequest,
   "/api/enhance-idea": handleEnhanceRequest,
   "/api/investors": handleInvestorsRequest,
+  "/api/screen-idea": handleScreenRequest,
 };
 
 function attachAnalyzeRoute(middlewares, env) {
