@@ -2268,6 +2268,27 @@
   font-size: 12px;
 }
 
+.messages-page .delete-conversation-button {
+  margin-left: auto;
+  padding: 8px 10px;
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--danger);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.messages-page .delete-conversation-button:hover:not(:disabled) {
+  background: var(--danger-soft);
+}
+
+.messages-page .delete-conversation-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 .messages-page .chat-messages {
   display: flex;
   flex: 1;

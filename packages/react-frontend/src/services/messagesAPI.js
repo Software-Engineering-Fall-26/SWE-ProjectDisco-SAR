@@ -183,6 +183,17 @@ export async function markConversationRead(conversationId) {
     if (error) throw error;
 }
 
+export async function deleteConversationForCurrentUser(conversationId) {
+    const { error } = await supabase.rpc(
+        "delete_conversation_for_current_user",
+        {
+            p_conversation_id: conversationId,
+        }
+    );
+
+    if (error) throw error;
+}
+
 export function subscribeToUnreadMessages(
     conversationIds,
     onNewMessage
