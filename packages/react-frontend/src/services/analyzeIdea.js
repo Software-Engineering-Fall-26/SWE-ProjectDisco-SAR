@@ -50,6 +50,10 @@ export function enhanceIdea(idea) {
   return postIdea("/api/enhance-idea", idea, "Could not enhance this idea.");
 }
 
+export function screenIdea(idea) {
+  return postIdea("/api/screen-idea", idea, "Could not review this idea.");
+}
+
 export function findInvestors(idea) {
   return postIdea(
     "/api/investors",

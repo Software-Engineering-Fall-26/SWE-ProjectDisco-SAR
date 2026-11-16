@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "./useAuth";
 import IdeaComments from "./components/IdeaComments";
 import IdeaDetailModal from "./components/IdeaDetailModal";
+import ReportIdea from "./components/ReportIdea";
 import {
   getIdeaLikeSummaries,
   getPublicIdeas,
@@ -69,9 +70,10 @@ function IdeaBoard() {
   const [search, setSearch] = useState("");
   const [filterId, setFilterId] = useState("all");
   const [selectedIdea, setSelectedIdea] = useState(null);
+  const [reporting, setReporting] = useState(false);
+  const [notice, setNotice] = useState("");
   const [sendingRequest, setSendingRequest] = useState(false);
-  const [sentRequestIds, setSentRequestIds] = useState([]);
-  const [collaborationError, setCollaborationError] = useState(""); 
+  const [collaborationError, setCollaborationError] = useState("");
   const [requestStatus, setRequestStatus] = useState(null);
   const [requestStatusLoading, setRequestStatusLoading] = useState(false);
   const [alreadyCollaborating, setAlreadyCollaborating] = useState(false);
@@ -86,8 +88,20 @@ function IdeaBoard() {
 
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      setSelectedIdea(idea);
+      openIdea(idea);
     }
+  }
+
+  function openIdea(idea) {
+    setReporting(false);
+    setSelectedIdea(idea);
+  }
+
+  function handleReported(ideaId) {
+    setIdeas((current) => current.filter((idea) => idea.id !== ideaId));
+    setSelectedIdea(null);
+    setReporting(false);
+    setNotice("Reported. That idea is off the Idea Board.");
   }
 
   useEffect(() => {
@@ -149,7 +163,11 @@ function IdeaBoard() {
     return (
       <button
         type="button"
-        className={summary.likedByCurrentUser ? "idea-like-button liked" : "idea-like-button"}
+        className={
+          summary.likedByCurrentUser
+            ? "idea-like-button liked"
+            : "idea-like-button"
+        }
         onClick={(event) => handleLike(event, idea)}
         disabled={isUpdating}
         aria-pressed={summary.likedByCurrentUser}
@@ -190,14 +208,12 @@ function IdeaBoard() {
     try {
       await sendCollaborationRequest(selectedIdea);
       setRequestStatus("pending");
-
-    } catch (error) {
-      setCollaborationError(error.message);
+    } catch (requestError) {
+      setCollaborationError(requestError.message);
     } finally {
       setSendingRequest(false);
     }
   }
-
 
   useEffect(() => {
     if (!selectedIdea?.id || !user?.id) {
@@ -217,15 +233,13 @@ function IdeaBoard() {
       setRequestStatus(null);
 
       try {
-        const request = await fetchMyCollaborationRequest(
-          selectedIdea.id
-        );
+        const request = await fetchMyCollaborationRequest(selectedIdea.id);
 
         if (!cancelled) {
           setRequestStatus(request?.status ?? null);
         }
-      } catch (error) {
-        console.error("Failed to load request status:", error);
+      } catch (statusError) {
+        console.error("Failed to load request status:", statusError);
       } finally {
         if (!cancelled) {
           setRequestStatusLoading(false);
@@ -240,10 +254,8 @@ function IdeaBoard() {
     };
   }, [selectedIdea?.id, selectedIdea?.user_id, user?.id]);
 
-
   useEffect(() => {
-    if (!selectedIdea?.id || !user?.id ||
-        selectedIdea.user_id === user.id) {
+    if (!selectedIdea?.id || !user?.id || selectedIdea.user_id === user.id) {
       setAlreadyCollaborating(false);
       setCheckingCollaboration(false);
       return;
@@ -256,15 +268,13 @@ function IdeaBoard() {
       setCheckingCollaboration(true);
 
       try {
-        const exists = await alreadyHasConversation(
-          selectedIdea.user_id
-        );
+        const exists = await alreadyHasConversation(selectedIdea.user_id);
 
         if (!cancelled) {
           setAlreadyCollaborating(exists);
         }
-      } catch (err) {
-        console.error("Could not check collaboration:", err);
+      } catch (checkError) {
+        console.error("Could not check collaboration:", checkError);
       } finally {
         if (!cancelled) {
           setCheckingCollaboration(false);
@@ -279,7 +289,6 @@ function IdeaBoard() {
     };
   }, [selectedIdea?.id, selectedIdea?.user_id, user?.id]);
 
-
   return (
     <div className="idea-board">
       <header className="page-header">
@@ -288,10 +297,13 @@ function IdeaBoard() {
         <p className="page-intro">
           Public ideas from people on Disco. See what they are building and who
           they are looking for, from investors and co-founders to early users.
+          Report an idea that doesn't belong. It comes off the board, with the
+          reason you choose.
         </p>
       </header>
 
       {error && <p className="error-message">{error}</p>}
+      {notice && <p className="info-message">{notice}</p>}
 
       <div className="board-toolbar">
         <label className="board-search-label">
@@ -346,7 +358,7 @@ function IdeaBoard() {
                 className="board-card board-card-clickable"
                 role="button"
                 tabIndex={0}
-                onClick={() => setSelectedIdea(idea)}
+                onClick={() => openIdea(idea)}
                 onKeyDown={(event) => handleIdeaKeyDown(event, idea)}
               >
                 <div className="board-card-top">
@@ -371,7 +383,9 @@ function IdeaBoard() {
                 </div>
 
                 <p className="board-description">{idea.description}</p>
-                <div className="board-card-actions">{renderLikeButton(idea)}</div>
+                <div className="board-card-actions">
+                  {renderLikeButton(idea)}
+                </div>
               </article>
             ))}
           </div>
@@ -384,9 +398,32 @@ function IdeaBoard() {
           author={authorLabel(selectedIdea, user?.id)}
           isOwner={selectedIdea.user_id === user?.id}
           showVisibility={false}
-          onClose={() => setSelectedIdea(null)}
+          onClose={() => {
+            setSelectedIdea(null);
+            setReporting(false);
+          }}
           actions={renderLikeButton(selectedIdea)}
         >
+          {selectedIdea.user_id !== user?.id && !reporting && (
+            <div className="idea-modal-actions">
+              <button
+                type="button"
+                className="danger"
+                onClick={() => setReporting(true)}
+              >
+                Report
+              </button>
+            </div>
+          )}
+
+          {reporting && selectedIdea.user_id !== user?.id && (
+            <ReportIdea
+              ideaId={selectedIdea.id}
+              onCancel={() => setReporting(false)}
+              onReported={() => handleReported(selectedIdea.id)}
+            />
+          )}
+
           {user && selectedIdea.user_id !== user.id && (
             <div className="idea-collaboration-section">
               {checkingCollaboration ? (
@@ -421,7 +458,8 @@ function IdeaBoard() {
                             : "Request to collaborate"}
                   </span>
                   <span aria-hidden="true">
-                    {requestStatus === "pending" || requestStatus === "accepted"
+                    {requestStatus === "pending" ||
+                    requestStatus === "accepted"
                       ? "✓"
                       : "→"}
                   </span>

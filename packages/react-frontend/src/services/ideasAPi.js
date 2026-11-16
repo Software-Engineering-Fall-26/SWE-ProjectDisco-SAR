@@ -1,7 +1,12 @@
 import { supabase } from "../supabaseClient";
+import { assertCanPublish, filterBoardIdeas } from "./contentModeration";
+import { getReportedIdeaIds } from "./reportsApi";
 
 const IDEA_COLUMNS =
   "id, user_id, title, description, looking_for, is_public, author_username, created_at";
+
+const IDEA_COLUMNS_WITH_MODERATION =
+  `${IDEA_COLUMNS}, moderation_status, moderation_reason`;
 
 function requireSupabase() {
   if (!supabase) {
@@ -15,6 +20,26 @@ function throwIfError(error) {
   if (error) {
     throw new Error(error.message);
   }
+}
+
+function keepModeration(saved, idea) {
+  if (saved?.moderation_status) {
+    return saved;
+  }
+
+  return {
+    ...saved,
+    moderation_status: idea?.moderation_status || "visible",
+    moderation_reason: idea?.moderation_reason || "",
+  };
+}
+
+function isMissingModerationColumn(error) {
+  const message = `${error?.message || ""} ${error?.details || ""}`;
+  return (
+    message.includes("moderation_status") ||
+    message.includes("moderation_reason")
+  );
 }
 
 async function requireUser() {
@@ -32,36 +57,56 @@ async function requireUser() {
   return user;
 }
 
+async function selectIdeaRows(applyFilters) {
+  const primary = await applyFilters(
+    supabase.from("ideas").select(IDEA_COLUMNS_WITH_MODERATION),
+  );
+
+  if (!primary.error) {
+    return primary.data ?? [];
+  }
+
+  if (!isMissingModerationColumn(primary.error)) {
+    throw new Error(primary.error.message);
+  }
+
+  const fallback = await applyFilters(
+    supabase.from("ideas").select(IDEA_COLUMNS),
+  );
+
+  throwIfError(fallback.error);
+  return fallback.data ?? [];
+}
+
 export async function getIdeas() {
   requireSupabase();
 
   const user = await requireUser();
 
-  const { data, error } = await supabase
-    .from("ideas")
-    .select(IDEA_COLUMNS)
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
-
-  throwIfError(error);
-  return data;
+  return selectIdeaRows((query) =>
+    query.eq("user_id", user.id).order("created_at", { ascending: false }),
+  );
 }
 
-export async function getPublicIdeas() {
+export async function getPublicIdeas({ userId } = {}) {
   requireSupabase();
 
   await requireUser();
 
-  const { data, error } = await supabase
-    .from("ideas")
-    .select(
-      "id, user_id, title, description, looking_for, is_public, author_username, created_at",
-    )
-    .eq("is_public", true)
-    .order("created_at", { ascending: false });
+  const data = await selectIdeaRows((query) => {
+    let next = query
+      .eq("is_public", true)
+      .order("created_at", { ascending: false });
 
-  throwIfError(error);
-  return data;
+    if (userId) {
+      next = next.eq("user_id", userId);
+    }
+
+    return next;
+  });
+
+  const reportedIds = await getReportedIdeaIds();
+  return filterBoardIdeas(data, reportedIds);
 }
 
 export async function getIdeaLikeSummaries(ideaIds) {
@@ -115,6 +160,10 @@ export async function setIdeaLike(ideaId, shouldLike) {
 export async function createIdea(idea) {
   requireSupabase();
 
+  if (idea.isPublic) {
+    assertCanPublish(idea);
+  }
+
   const { data, error } = await supabase
     .from("ideas")
     .insert({
@@ -133,6 +182,10 @@ export async function createIdea(idea) {
 export async function updateIdea(id, idea) {
   requireSupabase();
 
+  if (idea.isPublic) {
+    assertCanPublish(idea);
+  }
+
   const { data, error } = await supabase
     .from("ideas")
     .update({
@@ -146,11 +199,18 @@ export async function updateIdea(id, idea) {
     .single();
 
   throwIfError(error);
-  return data;
+  return keepModeration(data, idea);
 }
 
-export async function setIdeaVisibility(id, isPublic) {
+export async function setIdeaVisibility(id, isPublic, idea) {
   requireSupabase();
+
+  if (isPublic) {
+    assertCanPublish({
+      ...idea,
+      isPublic: true,
+    });
+  }
 
   const { data, error } = await supabase
     .from("ideas")
@@ -160,7 +220,7 @@ export async function setIdeaVisibility(id, isPublic) {
     .single();
 
   throwIfError(error);
-  return data;
+  return keepModeration(data, idea);
 }
 
 export async function deleteIdea(id) {

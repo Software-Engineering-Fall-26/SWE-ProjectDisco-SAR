@@ -13,12 +13,17 @@ import {
   findInvestors,
 } from "./services/analyzeIdea";
 import {
+  reviewPublicIdea,
+  reviewPublicIdeaForPublish,
+} from "./services/contentModeration";
+import {
   getIdeas,
   createIdea,
   updateIdea,
   setIdeaVisibility,
   deleteIdea,
 } from "./services/ideasAPi";
+import PublishFlag from "./components/PublishFlag";
 
 function Ideas() {
   const [ideas, setIdeas] = useState([]);
@@ -34,6 +39,8 @@ function Ideas() {
   const [enhancingId, setEnhancingId] = useState(null);
   const [findingInvestorsId, setFindingInvestorsId] = useState(null);
   const [applyingId, setApplyingId] = useState(null);
+  const [publishFlags, setPublishFlags] = useState([]);
+  const [checkingPublish, setCheckingPublish] = useState(false);
 
   useEffect(() => {
     async function loadIdeas() {
@@ -115,7 +122,11 @@ function Ideas() {
 
     try {
       if (ideaToEdit) {
-        const updatedIdea = await updateIdea(ideaToEdit.id, idea);
+        const updatedIdea = await updateIdea(ideaToEdit.id, {
+          ...idea,
+          moderation_status: ideaToEdit.moderation_status,
+          moderation_reason: ideaToEdit.moderation_reason,
+        });
         replaceIdea(updatedIdea);
         setIdeaToEdit(null);
         setAnalyses((current) => {
@@ -151,9 +162,18 @@ function Ideas() {
 
       return true;
     } catch (saveError) {
+      if (saveError.flags?.length) {
+        setPublishFlags(saveError.flags);
+      }
+
       setError(saveError.message);
       return false;
     }
+  }
+
+  function selectIdea(idea) {
+    setPublishFlags([]);
+    setSelectedIdea(idea);
   }
 
   function handleEdit(idea) {
@@ -366,17 +386,39 @@ function Ideas() {
     setError("");
 
     try {
+      if (idea.is_public) {
+        const review = await reviewPublicIdeaForPublish({
+          title: enhancement.enhancedTitle,
+          description: enhancement.enhancedDescription,
+          looking_for: idea.looking_for || "",
+          moderation_status: idea.moderation_status,
+          moderation_reason: idea.moderation_reason,
+        });
+
+        if (!review.allowed) {
+          setPublishFlags(review.flags);
+          return;
+        }
+      }
+
       const updatedIdea = await updateIdea(idea.id, {
         title: enhancement.enhancedTitle,
         description: enhancement.enhancedDescription,
         lookingFor: idea.looking_for || "",
         isPublic: Boolean(idea.is_public),
+        moderation_status: idea.moderation_status,
+        moderation_reason: idea.moderation_reason,
       });
 
       replaceIdea(updatedIdea);
       dismissCoach(idea.id);
+      setPublishFlags([]);
     } catch (applyError) {
-      setError(applyError.message);
+      if (applyError.flags?.length) {
+        setPublishFlags(applyError.flags);
+      } else {
+        setError(applyError.message);
+      }
     } finally {
       setApplyingId(null);
     }
@@ -386,6 +428,22 @@ function Ideas() {
     const nextPublic = !idea.is_public;
 
     if (nextPublic) {
+      setCheckingPublish(true);
+      setError("");
+
+      let review;
+
+      try {
+        review = await reviewPublicIdeaForPublish(idea);
+      } finally {
+        setCheckingPublish(false);
+      }
+
+      if (!review.allowed) {
+        setPublishFlags(review.flags);
+        return;
+      }
+
       const shouldPublish = window.confirm(
         "Make this idea public on the Idea Board? Other signed-in users will be able to see it.",
       );
@@ -396,16 +454,21 @@ function Ideas() {
     }
 
     setError("");
+    setPublishFlags([]);
 
     try {
-      const updatedIdea = await setIdeaVisibility(idea.id, nextPublic);
+      const updatedIdea = await setIdeaVisibility(idea.id, nextPublic, idea);
       replaceIdea(updatedIdea);
 
       if (nextPublic) {
         dismissCoach(idea.id);
       }
     } catch (toggleError) {
-      setError(toggleError.message);
+      if (toggleError.flags?.length) {
+        setPublishFlags(toggleError.flags);
+      } else {
+        setError(toggleError.message);
+      }
     }
   }
 
@@ -429,7 +492,17 @@ function Ideas() {
   const selectedEnhancementApplied =
     selectedEnhancement?.result &&
     selectedIdea.title === selectedEnhancement.result.enhancedTitle &&
-    selectedIdea.description === selectedEnhancement.result.enhancedDescription;
+    selectedIdea.description ===
+      selectedEnhancement.result.enhancedDescription;
+  const selectedReview = selectedIdea ? reviewPublicIdea(selectedIdea) : null;
+  const selectedFlagged = Boolean(
+    selectedIdea?.is_public && selectedReview && !selectedReview.allowed,
+  );
+  const modalFlags = publishFlags.length
+    ? publishFlags
+    : selectedFlagged
+      ? selectedReview.flags
+      : [];
 
   return (
     <div className="ideas-page">
@@ -440,7 +513,8 @@ function Ideas() {
           Write the idea, then enhance it. You get a sharper version and the
           specific changes that would make it stronger. Open an idea to find
           investors who publicly back that niche. It stays private until you
-          publish.
+          publish. Inappropriate ideas can't be published, and Disco flags
+          why.
         </p>
       </header>
 
@@ -461,7 +535,7 @@ function Ideas() {
         {loading ? (
           <p className="empty-state">Loading ideas...</p>
         ) : (
-          <IdeasTable ideas={ideas} onSelectIdea={setSelectedIdea} />
+          <IdeasTable ideas={ideas} onSelectIdea={selectIdea} />
         )}
       </section>
 
@@ -470,8 +544,19 @@ function Ideas() {
           idea={selectedIdea}
           author="You"
           isOwner
-          onClose={() => setSelectedIdea(null)}
+          visibilityLabel={selectedFlagged ? "Flagged" : undefined}
+          visibilityTone={selectedFlagged ? "flagged" : undefined}
+          onClose={() => {
+            setSelectedIdea(null);
+            setPublishFlags([]);
+          }}
         >
+          {modalFlags.length > 0 && (
+            <div className="idea-modal-flag">
+              <PublishFlag flags={modalFlags} />
+            </div>
+          )}
+
           <div className="idea-modal-actions">
             <button
               type="button"
@@ -495,8 +580,13 @@ function Ideas() {
             <button
               type="button"
               onClick={() => handleToggleVisibility(selectedIdea)}
+              disabled={checkingPublish}
             >
-              {selectedIdea.is_public ? "Make private" : "Make public"}
+              {checkingPublish
+                ? "Checking..."
+                : selectedIdea.is_public
+                  ? "Make private"
+                  : "Make public"}
             </button>
             <button
               type="button"

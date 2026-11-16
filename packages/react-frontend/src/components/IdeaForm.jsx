@@ -1,8 +1,13 @@
 import { useRef, useState } from "react";
 
 import { enhanceIdea } from "../services/analyzeIdea";
+import {
+  reviewPublicIdea,
+  reviewPublicIdeaForPublish,
+} from "../services/contentModeration";
 import IdeaEnhance from "./IdeaEnhance";
 import LookingForSelect from "./LookingForSelect";
+import PublishFlag from "./PublishFlag";
 
 const IDEA_TITLE_MAX_LENGTH = 100;
 const IDEA_DESCRIPTION_MAX_LENGTH = 2000;
@@ -13,6 +18,8 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
   const [lookingFor, setLookingFor] = useState(ideaToEdit?.looking_for ?? "");
   const [isPublic, setIsPublic] = useState(Boolean(ideaToEdit?.is_public));
   const [formError, setFormError] = useState("");
+  const [aiFlags, setAiFlags] = useState([]);
+  const [checking, setChecking] = useState(false);
   const [saving, setSaving] = useState(false);
   const [enhancing, setEnhancing] = useState(false);
   const [enhanceError, setEnhanceError] = useState("");
@@ -26,7 +33,17 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
       description: description.trim(),
       lookingFor: lookingFor.trim(),
       isPublic,
+      moderation_status: ideaToEdit?.moderation_status,
+      moderation_reason: ideaToEdit?.moderation_reason,
     };
+  }
+
+  function reviewForPublish(idea) {
+    if (!idea.isPublic) {
+      return { allowed: true, flags: [] };
+    }
+
+    return reviewPublicIdea(idea);
   }
 
   function markApplied(nextTitle, nextDescription) {
@@ -46,12 +63,14 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
 
   function updateTitle(value) {
     setTitle(value);
+    setAiFlags([]);
     setPreviousDraft(null);
     markApplied(value, description);
   }
 
   function updateDescription(value) {
     setDescription(value);
+    setAiFlags([]);
     setPreviousDraft(null);
     markApplied(title, value);
   }
@@ -131,11 +150,30 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
   async function handleSubmit(event) {
     event.preventDefault();
 
+    const idea = currentIdea();
+
+    if (!reviewForPublish(idea).allowed) {
+      setFormError("");
+      return;
+    }
+
+    if (idea.isPublic) {
+      setChecking(true);
+      setFormError("");
+      const review = await reviewPublicIdeaForPublish(idea);
+      setChecking(false);
+
+      if (!review.allowed) {
+        setAiFlags(review.flags);
+        return;
+      }
+    }
+
     setFormError("");
+    setAiFlags([]);
     setSaving(true);
     requestRef.current += 1;
 
-    const idea = currentIdea();
     const wasEditing = Boolean(ideaToEdit);
     const matchesSource =
       enhancement &&
@@ -169,6 +207,7 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
 
   function chooseVisibility(nextPublic) {
     setIsPublic(nextPublic);
+    setAiFlags([]);
 
     if (!nextPublic) {
       return;
@@ -183,6 +222,9 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
 
   const showEnhance =
     !isPublic && (enhancing || enhanceError || enhancement);
+  const publishReview = reviewForPublish(currentIdea());
+  const visibleFlags = publishReview.allowed ? aiFlags : publishReview.flags;
+  const publishBlocked = visibleFlags.length > 0;
 
   return (
     <form className="idea-form" onSubmit={handleSubmit}>
@@ -215,7 +257,10 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
         <LookingForSelect
           id="looking-for"
           value={lookingFor}
-          onChange={setLookingFor}
+          onChange={(value) => {
+            setLookingFor(value);
+            setAiFlags([]);
+          }}
         />
       </div>
 
@@ -260,7 +305,7 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
           <span>
             Public
             <span className="field-hint">
-              Shows on the Idea Board for signed-in users
+              A word list, then an AI check. Clinical terms are fine.
             </span>
           </span>
         </label>
@@ -282,6 +327,12 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
         </div>
       )}
 
+      {publishBlocked && (
+        <div className="full-width">
+          <PublishFlag flags={visibleFlags} />
+        </div>
+      )}
+
       {formError && <p className="error-message full-width">{formError}</p>}
 
       <div className="idea-form-actions full-width">
@@ -289,13 +340,25 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
           type="button"
           className="btn-enhance"
           onClick={handleEnhance}
-          disabled={enhancing || saving}
+          disabled={enhancing || saving || checking}
         >
           {enhancing ? "Enhancing..." : "Enhance"}
         </button>
 
-        <button type="submit" className="btn-primary" disabled={saving}>
-          {saving ? "Saving..." : ideaToEdit ? "Save changes" : "Add idea"}
+        <button
+          type="submit"
+          className="btn-primary"
+          disabled={saving || checking || publishBlocked}
+        >
+          {checking
+            ? "Checking..."
+            : saving
+              ? "Saving..."
+              : publishBlocked
+                ? "Can't publish"
+                : ideaToEdit
+                  ? "Save changes"
+                  : "Add idea"}
         </button>
 
         {ideaToEdit && (

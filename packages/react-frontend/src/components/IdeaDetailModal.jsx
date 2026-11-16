@@ -13,6 +13,8 @@ function IdeaDetailModal({
   author,
   isOwner,
   showVisibility = true,
+  visibilityLabel,
+  visibilityTone,
   onClose,
   actions,
   children,
@@ -53,13 +55,11 @@ function IdeaDetailModal({
           </div>
           {showVisibility && (
             <span
-              className={
-                idea.is_public
-                  ? "visibility-badge public"
-                  : "visibility-badge private"
-              }
+              className={`visibility-badge ${
+                visibilityTone || (idea.is_public ? "public" : "private")
+              }`}
             >
-              {idea.is_public ? "Public" : "Private"}
+              {visibilityLabel || (idea.is_public ? "Public" : "Private")}
             </span>
           )}
         </header>

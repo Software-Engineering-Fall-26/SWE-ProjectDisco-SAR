@@ -1070,6 +1070,46 @@
   color: var(--accent-ink);
 }
 
+.visibility-badge.flagged {
+  border: 1px solid transparent;
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.publish-flag {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--danger);
+  border-radius: 12px;
+  background: var(--danger-soft);
+  color: var(--ink-soft);
+}
+
+.publish-flag h3 {
+  margin: 0 0 6px;
+  color: var(--danger);
+  font-size: 15px;
+}
+
+.publish-flag p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.publish-flag ul {
+  margin: 10px 0 0;
+  padding-left: 18px;
+}
+
+.publish-flag li + li {
+  margin-top: 6px;
+}
+
+.publish-flag strong {
+  color: var(--danger);
+}
+
 .board-toolbar {
   display: flex;
   flex-direction: column;
@@ -1436,6 +1476,89 @@
 
 .idea-modal-actions button.danger {
   color: #a32626;
+}
+
+.idea-modal-flag {
+  margin-top: 18px;
+}
+
+.report-idea {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg-elevated);
+}
+
+.report-idea h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.report-idea p,
+.report-idea .error-message {
+  margin: 0;
+}
+
+.report-idea p {
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
+.report-idea label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.report-idea select,
+.report-idea textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.report-idea textarea {
+  resize: vertical;
+}
+
+.report-idea-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.report-idea-actions button {
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.report-idea-actions button.btn-primary {
+  border-color: transparent;
+  background: var(--btn);
+  color: var(--btn-ink);
+}
+
+.report-idea-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .idea-comments {

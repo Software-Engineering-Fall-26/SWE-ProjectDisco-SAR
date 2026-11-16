@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { analyzeIdeaWithGroq } from "./analyzeIdea.js";
 import { enhanceIdeaWithGroq } from "./enhanceIdea.js";
 import { findInvestorsWithGroq } from "./findInvestors.js";
+import { screenIdeaWithGroq } from "./screenIdea.js";
 import { AnalysisError, normalizeIdeaInput } from "./groq.js";
 
 async function requireSignedInUser({
@@ -64,6 +65,19 @@ export async function handleEnhanceRequest({
 
   const idea = normalizeIdeaInput(body);
   return enhanceIdeaWithGroq(idea, apiKey);
+}
+
+export async function handleScreenRequest({
+  body,
+  apiKey,
+  authorization,
+  supabaseUrl,
+  supabaseAnonKey,
+}) {
+  await requireSignedInUser({ authorization, supabaseUrl, supabaseAnonKey });
+
+  const idea = normalizeIdeaInput(body);
+  return screenIdeaWithGroq(idea, apiKey);
 }
 
 export async function handleInvestorsRequest({

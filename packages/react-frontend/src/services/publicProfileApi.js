@@ -1,8 +1,7 @@
 import { supabase } from "../supabaseClient";
+import { getPublicIdeas } from "./ideasAPi";
 
 const PROFILE_FIELDS = "id, display_name, description, topics, avatar_path";
-const IDEA_FIELDS =
-  "id, user_id, title, description, looking_for, author_username, created_at";
 
 function requireSupabase() {
   if (!supabase) {
@@ -44,16 +43,7 @@ export async function fetchPublicMember(userId) {
     return null;
   }
 
-  const { data: ideas, error: ideasError } = await supabase
-    .from("ideas")
-    .select(IDEA_FIELDS)
-    .eq("user_id", userId)
-    .eq("is_public", true)
-    .order("created_at", { ascending: false });
-
-  if (ideasError) {
-    throw ideasError;
-  }
+  const ideas = await getPublicIdeas({ userId });
 
   const avatarUrl = await getAvatarUrl(profile.avatar_path);
 
