@@ -14,6 +14,7 @@ function IdeaDetailModal({
   isOwner,
   showVisibility = true,
   onClose,
+  actions,
   children,
 }) {
   useEffect(() => {
@@ -71,6 +72,7 @@ function IdeaDetailModal({
         </div>
 
         <p className="idea-modal-description">{idea.description}</p>
+        {actions && <div className="idea-modal-actions">{actions}</div>}
         {children}
       </section>
     </div>

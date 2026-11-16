@@ -4,12 +4,20 @@ import { Link } from "react-router-dom";
 import { useAuth } from "./useAuth";
 import IdeaComments from "./components/IdeaComments";
 import IdeaDetailModal from "./components/IdeaDetailModal";
+<<<<<<< Updated upstream
 import { getPublicIdeas } from "./services/ideasAPi";
 import {
   sendCollaborationRequest,
   fetchMyCollaborationRequest,
   alreadyHasConversation,
 } from "./services/collaborationAPI";
+=======
+import {
+  getIdeaLikeSummaries,
+  getPublicIdeas,
+  setIdeaLike,
+} from "./services/ideasAPi";
+>>>>>>> Stashed changes
 
 const BOARD_FILTERS = [
   { id: "all", label: "All" },
@@ -65,6 +73,7 @@ function IdeaBoard() {
   const [search, setSearch] = useState("");
   const [filterId, setFilterId] = useState("all");
   const [selectedIdea, setSelectedIdea] = useState(null);
+<<<<<<< Updated upstream
   const [sendingRequest, setSendingRequest] = useState(false);
   const [sentRequestIds, setSentRequestIds] = useState([]);
   const [collaborationError, setCollaborationError] = useState(""); 
@@ -72,6 +81,10 @@ function IdeaBoard() {
   const [requestStatusLoading, setRequestStatusLoading] = useState(false);
   const [alreadyCollaborating, setAlreadyCollaborating] = useState(false);
   const [checkingCollaboration, setCheckingCollaboration] = useState(false);
+=======
+  const [likeSummaries, setLikeSummaries] = useState({});
+  const [updatingLikeId, setUpdatingLikeId] = useState(null);
+>>>>>>> Stashed changes
 
   function handleIdeaKeyDown(event, idea) {
     if (event.target !== event.currentTarget) {
@@ -89,6 +102,9 @@ function IdeaBoard() {
       try {
         const loadedIdeas = await getPublicIdeas();
         setIdeas(loadedIdeas);
+        setLikeSummaries(
+          await getIdeaLikeSummaries(loadedIdeas.map((idea) => idea.id)),
+        );
       } catch (loadError) {
         setError(loadError.message);
       } finally {
@@ -98,6 +114,58 @@ function IdeaBoard() {
 
     loadPublicIdeas();
   }, []);
+
+  async function handleLike(event, idea) {
+    event?.stopPropagation();
+
+    const currentSummary = likeSummaries[idea.id] ?? {
+      count: 0,
+      likedByCurrentUser: false,
+    };
+    const shouldLike = !currentSummary.likedByCurrentUser;
+
+    setUpdatingLikeId(idea.id);
+    setLikeSummaries((current) => ({
+      ...current,
+      [idea.id]: {
+        count: Math.max(0, currentSummary.count + (shouldLike ? 1 : -1)),
+        likedByCurrentUser: shouldLike,
+      },
+    }));
+
+    try {
+      await setIdeaLike(idea.id, shouldLike);
+    } catch (likeError) {
+      setLikeSummaries((current) => ({
+        ...current,
+        [idea.id]: currentSummary,
+      }));
+      setError(likeError.message);
+    } finally {
+      setUpdatingLikeId(null);
+    }
+  }
+
+  function renderLikeButton(idea) {
+    const summary = likeSummaries[idea.id] ?? {
+      count: 0,
+      likedByCurrentUser: false,
+    };
+    const isUpdating = updatingLikeId === idea.id;
+
+    return (
+      <button
+        type="button"
+        className={summary.likedByCurrentUser ? "idea-like-button liked" : "idea-like-button"}
+        onClick={(event) => handleLike(event, idea)}
+        disabled={isUpdating}
+        aria-pressed={summary.likedByCurrentUser}
+      >
+        <span aria-hidden="true">♥</span>
+        {summary.count} {summary.count === 1 ? "like" : "likes"}
+      </button>
+    );
+  }
 
   const visibleIdeas = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -310,12 +378,14 @@ function IdeaBoard() {
                 </div>
 
                 <p className="board-description">{idea.description}</p>
+                <div className="board-card-actions">{renderLikeButton(idea)}</div>
               </article>
             ))}
           </div>
         </>
       )}
 
+<<<<<<< Updated upstream
 
         {selectedIdea && (
           <IdeaDetailModal
@@ -387,6 +457,20 @@ function IdeaBoard() {
           </IdeaDetailModal>
         )}
 
+=======
+      {selectedIdea && (
+        <IdeaDetailModal
+          idea={selectedIdea}
+          author={authorLabel(selectedIdea, user?.id)}
+          isOwner={selectedIdea.user_id === user?.id}
+          showVisibility={false}
+          onClose={() => setSelectedIdea(null)}
+          actions={renderLikeButton(selectedIdea)}
+        >
+          <IdeaComments ideaId={selectedIdea.id} currentUserId={user?.id} />
+        </IdeaDetailModal>
+      )}
+>>>>>>> Stashed changes
     </div>
   );
 }

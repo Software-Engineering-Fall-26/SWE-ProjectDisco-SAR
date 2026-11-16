@@ -64,6 +64,54 @@ export async function getPublicIdeas() {
   return data;
 }
 
+export async function getIdeaLikeSummaries(ideaIds) {
+  requireSupabase();
+
+  if (ideaIds.length === 0) {
+    return {};
+  }
+
+  const { data, error } = await supabase.rpc("get_public_idea_like_summaries", {
+    p_idea_ids: ideaIds,
+  });
+
+  throwIfError(error);
+
+  return Object.fromEntries(
+    data.map((summary) => [
+      summary.idea_id,
+      {
+        count: Number(summary.like_count),
+        likedByCurrentUser: summary.liked_by_current_user,
+      },
+    ]),
+  );
+}
+
+export async function setIdeaLike(ideaId, shouldLike) {
+  requireSupabase();
+
+  const user = await requireUser();
+
+  if (shouldLike) {
+    const { error } = await supabase.from("idea_likes").insert({
+      idea_id: ideaId,
+      user_id: user.id,
+    });
+
+    throwIfError(error);
+    return;
+  }
+
+  const { error } = await supabase
+    .from("idea_likes")
+    .delete()
+    .eq("idea_id", ideaId)
+    .eq("user_id", user.id);
+
+  throwIfError(error);
+}
+
 export async function createIdea(idea) {
   requireSupabase();
 
