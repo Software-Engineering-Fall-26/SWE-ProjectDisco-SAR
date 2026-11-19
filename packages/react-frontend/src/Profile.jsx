@@ -489,7 +489,7 @@ function Profile() {
             className="preference-button"
             onClick={() => setNightModePreview((currentValue) => !currentValue)}
           >
-            Night mode: {nightModePreview ? "On" : "Off"} (preview only)
+            Night mode: {nightModePreview ? "On" : "Off"}
           </button>
 
           <label className="message-permission-label">
@@ -500,12 +500,9 @@ function Profile() {
                 updateProfileField("message_permission", event.target.checked)
               }
             />
-            Allow messages when messaging becomes available
+            Allow messages from other members
           </label>
 
-          <span className="field-hint">
-            Messaging is not available yet. This preference is saved for later.
-          </span>
 
           <div className="browser-notifications-setting">
             <button

@@ -135,6 +135,100 @@
   margin-bottom: 28px;
 }
 
+.notifications-page {
+  width: 100%;
+  max-width: 820px;
+}
+
+.notifications-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.notification-list {
+  display: grid;
+  gap: 10px;
+}
+
+.notification-settings {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.notification-settings h2,
+.notification-settings p {
+  margin: 0;
+}
+
+.notification-settings h2 {
+  color: var(--ink);
+  font-size: 16px;
+}
+
+.notification-settings p {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.notification-settings label {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
+.notification-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.notification-item.unread {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+}
+
+.notification-item h2,
+.notification-item p,
+.notification-item time {
+  margin: 0;
+}
+
+.notification-item h2 {
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.notification-item p {
+  margin-top: 4px;
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
+.notification-item time {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .page-kicker,
 .auth-kicker,
 .auth-aside-kicker {
