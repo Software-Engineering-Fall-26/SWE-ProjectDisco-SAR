@@ -8,14 +8,81 @@ import Profile from "./Profile";
 import PublicProfile from "./PublicProfile";
 import ResetPassword from "./ResetPassword";
 import Messages from "./Messages";
+import Notifications from "./Notifications";
 import { useEffect, useState } from "react";
 import { supabase } from "./supabaseClient";
 import { fetchUnreadCounts } from "./services/messagesAPI";
+import {
+  showBrowserMessageNotification,
+  showBrowserNotification,
+} from "./services/browserNotifications";
 
 
 function AppLayout() {
   const { user } = useAuth();
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setHasUnreadNotifications(false);
+      return undefined;
+    }
+
+    let active = true;
+
+    async function refreshNotificationStatus() {
+      const { count, error } = await supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .is("read_at", null);
+
+      if (error) {
+        console.error("Notification status error:", error);
+        return;
+      }
+
+      if (active) setHasUnreadNotifications((count ?? 0) > 0);
+    }
+
+    const channel = supabase
+      .channel(`sidebar-notifications-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          refreshNotificationStatus();
+
+          if (payload.eventType === "INSERT") {
+            const notificationTitles = {
+              idea_like: "Your idea received a like",
+              idea_comment: "New comment on your idea",
+              collaboration_request: "New collaboration request",
+            };
+
+            showBrowserNotification({
+              title: notificationTitles[payload.new.type] ?? "New notification",
+              body: payload.new.message,
+              tag: `disco-notification-${payload.new.type}`,
+            });
+          }
+        },
+      )
+      .subscribe();
+
+    refreshNotificationStatus();
+
+    return () => {
+      active = false;
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
 
   useEffect(() => {
     if (!user?.id) {
@@ -76,6 +143,7 @@ function AppLayout() {
               (payload) => {
                 if (payload.new.sender_id !== user.id) {
                   refreshUnreadStatus();
+                  showBrowserMessageNotification(payload.new);
                 }
               }
             )
@@ -182,18 +250,28 @@ function AppLayout() {
           <NavLink to="/board" className="sidebar-link">
             Idea Board
           </NavLink>
+
+          <NavLink to="/messages" className="sidebar-link">
+            <span>Messages</span>
+
+            {hasUnreadMessages && (
+              <span
+                className="sidebar-unread-dot"
+                aria-label="Unread messages"
+              />
+            )}
+          </NavLink>
+
+          <NavLink to="/notifications" className="sidebar-link">
+            <span>Notifications</span>
+            {hasUnreadNotifications && (
+              <span
+                className="sidebar-unread-dot"
+                aria-label="Unread notifications"
+              />
+            )}
+          </NavLink>
         </div>
-
-        <NavLink to="/messages" className="sidebar-link">
-          <span>Messages</span>
-
-          {hasUnreadMessages && (
-            <span
-              className="sidebar-unread-dot"
-              aria-label="Unread messages"
-            />
-          )}
-        </NavLink>
 
         <NavLink
           to="/profile"
@@ -242,6 +320,7 @@ function MyApp() {
         <Route path="/ideas" element={<Ideas />} />
         <Route path="/board" element={<IdeaBoard />} />
         <Route path="/messages" element={<Messages />} />
+        <Route path="/notifications" element={<Notifications />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/members/:userId" element={<PublicProfile />} />
       </Route>

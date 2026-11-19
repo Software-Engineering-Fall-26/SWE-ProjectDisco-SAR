@@ -12,6 +12,11 @@ import {
 
 import ConnectedAccounts from "./ConnectedAccounts";
 import { deleteCurrentAccount } from "./services/accountApi";
+import {
+  disableBrowserNotifications,
+  enableBrowserNotifications,
+  getBrowserNotificationState,
+} from "./services/browserNotifications";
 
 const PRESET_TOPICS = [
   "Technology",
@@ -42,6 +47,9 @@ function Profile() {
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [browserNotificationState, setBrowserNotificationState] = useState(
+    getBrowserNotificationState,
+  );
 
   useEffect(() => {
     if (!nightModePreview) {
@@ -147,6 +155,27 @@ function Profile() {
     });
 
     setCustomTopic("");
+  }
+
+  async function handleBrowserNotifications() {
+    setError("");
+    setMessage("");
+
+    const nextState = browserNotificationState.enabled
+      ? disableBrowserNotifications()
+      : await enableBrowserNotifications();
+
+    setBrowserNotificationState(nextState);
+
+    if (!nextState.supported) {
+      setError("This browser does not support notifications.");
+    } else if (nextState.permission === "denied") {
+      setError("Notifications are blocked in your browser settings.");
+    } else if (nextState.enabled) {
+      setMessage("Browser notifications are enabled for this device.");
+    } else {
+      setMessage("Browser notifications are turned off for this device.");
+    }
   }
 
   async function handleAvatarChange(event) {
@@ -460,7 +489,7 @@ function Profile() {
             className="preference-button"
             onClick={() => setNightModePreview((currentValue) => !currentValue)}
           >
-            Night mode: {nightModePreview ? "On" : "Off"} (preview only)
+            Night mode: {nightModePreview ? "On" : "Off"}
           </button>
 
           <label className="message-permission-label">
@@ -471,12 +500,25 @@ function Profile() {
                 updateProfileField("message_permission", event.target.checked)
               }
             />
-            Allow messages when messaging becomes available
+            Allow messages from other members
           </label>
 
-          <span className="field-hint">
-            Messaging is not available yet. This preference is saved for later.
-          </span>
+
+          <div className="browser-notifications-setting">
+            <button
+              type="button"
+              className="preference-button"
+              onClick={handleBrowserNotifications}
+              disabled={!browserNotificationState.supported}
+            >
+              {browserNotificationState.enabled
+                ? "Disable browser notifications"
+                : "Enable browser notifications"}
+            </button>
+            <span className="field-hint">
+              Get a popup for a new message when Disco is open in a background tab.
+            </span>
+          </div>
         </section>
 
         <ConnectedAccounts user={user} />
