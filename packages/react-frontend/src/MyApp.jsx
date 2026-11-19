@@ -9,6 +9,7 @@ import PublicProfile from "./PublicProfile";
 import ResetPassword from "./ResetPassword";
 import Messages from "./Messages";
 import Notifications from "./Notifications";
+import E2EIdeaFormHarness from "./test/E2EIdeaFormHarness";
 import { useEffect, useState } from "react";
 import { supabase } from "./supabaseClient";
 import { fetchUnreadCounts } from "./services/messagesAPI";
@@ -315,6 +316,9 @@ function MyApp() {
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      {import.meta.env.VITE_E2E_TEST === "true" && (
+        <Route path="/e2e/idea-form" element={<E2EIdeaFormHarness />} />
+      )}
 
       <Route element={<ProtectedRoute />}>
         <Route path="/ideas" element={<Ideas />} />

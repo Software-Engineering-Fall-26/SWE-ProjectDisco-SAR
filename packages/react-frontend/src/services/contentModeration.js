@@ -136,6 +136,10 @@ const RULES = [
   },
 ];
 
+const STEM_EXCLUSIONS = {
+  shit: ["shitake"],
+};
+
 function boundaryPattern(phrase) {
   const body = phrase
     .trim()
@@ -152,7 +156,12 @@ function stemPattern(stem) {
     .toLowerCase()
     .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-  return new RegExp(`(?:^|\\s)\\w*${body}\\w*(?:\\s|$)`);
+  const excludedWords = STEM_EXCLUSIONS[stem] || [];
+  const exclusion = excludedWords.length
+    ? `(?!${excludedWords.join("|")}(?:\\s|$))`
+    : "";
+
+  return new RegExp(`(?:^|\\s)${exclusion}\\w*${body}\\w*(?:\\s|$)`);
 }
 
 const COMPILED_RULES = RULES.map((rule) => ({

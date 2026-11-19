@@ -2,7 +2,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import react from "@vitejs/plugin-react";
-import { defineConfig, loadEnv } from "vite";
+import { loadEnv } from "vite";
+import { defineConfig } from "vitest/config";
 
 import { groqAnalyzePlugin } from "./server/groqPlugin.js";
 
@@ -18,5 +19,12 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), groqAnalyzePlugin(env)],
     envDir: repoRoot,
     envPrefix: ["VITE_", "NEXT_PUBLIC_"],
+    test: {
+      environment: "jsdom",
+      setupFiles: "./src/test/setup.js",
+      globals: true,
+      css: true,
+    exclude: ["tests/ui/**", "node_modules/**", "dist/**"],
+    },
   };
 });

@@ -1,5 +1,7 @@
 node_modules/
 dist/
+.npm-cache/
+.playwright-browsers/
 .env
 .env.local
 .env*.local
