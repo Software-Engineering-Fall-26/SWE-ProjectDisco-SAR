@@ -250,25 +250,28 @@ function AppLayout() {
           <NavLink to="/board" className="sidebar-link">
             Idea Board
           </NavLink>
+
+          <NavLink to="/messages" className="sidebar-link">
+            <span>Messages</span>
+
+            {hasUnreadMessages && (
+              <span
+                className="sidebar-unread-dot"
+                aria-label="Unread messages"
+              />
+            )}
+          </NavLink>
+
+          <NavLink to="/notifications" className="sidebar-link">
+            <span>Notifications</span>
+            {hasUnreadNotifications && (
+              <span
+                className="sidebar-unread-dot"
+                aria-label="Unread notifications"
+              />
+            )}
+          </NavLink>
         </div>
-
-        <NavLink to="/messages" className="sidebar-link">
-          <span>Messages</span>
-
-          {hasUnreadMessages && (
-            <span
-              className="sidebar-unread-dot"
-              aria-label="Unread messages"
-            />
-          )}
-        </NavLink>
-
-        <NavLink to="/notifications" className="sidebar-link">
-          <span>Notifications</span>
-          {hasUnreadNotifications && (
-            <span className="sidebar-unread-dot" aria-label="Unread notifications" />
-          )}
-        </NavLink>
 
         <NavLink
           to="/profile"
