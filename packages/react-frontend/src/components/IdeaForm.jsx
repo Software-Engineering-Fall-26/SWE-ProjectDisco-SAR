@@ -237,9 +237,10 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
         </p>
       </div>
 
-      <label>
+      <label htmlFor="idea-title">
         Title
         <input
+          id="idea-title"
           type="text"
           value={title}
           placeholder="Neighborhood tool library"
@@ -264,9 +265,10 @@ function IdeaForm({ ideaToEdit, onSave, onCancel }) {
         />
       </div>
 
-      <label className="full-width">
+      <label className="full-width" htmlFor="idea-description">
         Description
         <textarea
+          id="idea-description"
           value={description}
           placeholder="Who it's for, the problem, and what the product does."
           onChange={(event) => updateDescription(event.target.value)}

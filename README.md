@@ -25,3 +25,22 @@ MyApp.jsx: Defines the application routes and shared page layout. It controls na
 main.jsx: Starts the React application and provides BrowserRouter, which enables navigation between pages.
 main.css: Contains global styling and basic browser layout resets.
 pages.css: Contains styling for the login page, sidebar, ideas form, ideas table, and profile page. Color variables are defined at the top of this file so the application theme can be changed from one location.
+
+## Automated testing
+
+This project uses Vitest and React Testing Library for unit and system tests,
+and Playwright for browser UI tests. Setup instructions, commands, the testing
+levels, TDD evidence, required local downloads, and known limitations are in
+[TESTING.md](TESTING.md).
+
+From the repository root, run the unit and system suite with:
+
+```powershell
+npm test
+```
+
+Run browser UI tests with:
+
+```powershell
+npm run test:ui
+```
