@@ -11,6 +11,10 @@ import Messages from "./Messages";
 import { useEffect, useState } from "react";
 import { supabase } from "./supabaseClient";
 import { fetchUnreadCounts } from "./services/messagesAPI";
+import {
+  showBrowserMessageNotification,
+  showBrowserNotification,
+} from "./services/browserNotifications";
 
 
 function AppLayout() {
@@ -76,6 +80,7 @@ function AppLayout() {
               (payload) => {
                 if (payload.new.sender_id !== user.id) {
                   refreshUnreadStatus();
+                  showBrowserMessageNotification(payload.new);
                 }
               }
             )
@@ -113,6 +118,28 @@ function AppLayout() {
           });
 
         channels.push(readChannel);
+
+        const collaborationRequestChannel = supabase
+          .channel(`collaboration-requests-${user.id}`)
+          .on(
+            "postgres_changes",
+            {
+              event: "INSERT",
+              schema: "public",
+              table: "collaboration_requests",
+              filter: `owner_id=eq.${user.id}`,
+            },
+            () => {
+              showBrowserNotification({
+                title: "New collaboration request",
+                body: "Someone wants to collaborate on one of your ideas.",
+                tag: "disco-collaboration-request",
+              });
+            },
+          )
+          .subscribe();
+
+        channels.push(collaborationRequestChannel);
 
         refreshUnreadStatus();
       } catch (error) {
